@@ -1,8 +1,8 @@
 import random
 
-from board import Board
-from monopoly_rules import MonopolicRules
-from monopoly_rules import ROLL_DICE, BUY_PROPERTY, BUILD, END_TURN
+from monopoly.board import Board
+from monopoly.rules import ClassicMonopolyRules
+from monopoly.rules import ROLL_DICE, BUY_PROPERTY, BUILD, END_TURN
 
 
 def test_never_buy_build_at_the_same_time(possible_actions_history):
@@ -27,8 +27,8 @@ def test_all_actions_are_proposed(possible_actions_history):
 
 
 def test_all_positions_visited():
-    board = Board(number_of_players=6, board_file='board.csv')
-    game = MonopolicRules(board=board)
+    board = Board(number_of_players=6, board_file='monopoly/default.csv')
+    game = ClassicMonopolyRules(board=board)
     terminal_state = False
     locations_visited = set()
     for i in range(1, 500000):
@@ -44,8 +44,8 @@ def test_all_positions_visited():
 
 if __name__ == "__main__":
 
-    board = Board(number_of_players=6, board_file='board.csv')
-    game = MonopolicRules(board=board)
+    board = Board(number_of_players=6, board_file='monopoly/default.csv')
+    game = ClassicMonopolyRules(board=board)
 
     terminal_state = False
     possible_actions_history = []

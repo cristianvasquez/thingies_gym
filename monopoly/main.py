@@ -1,10 +1,9 @@
-from agents import Random_agent, Compulsive_buyer_agent, Compulsive_builder_agent, \
+from monopoly.agents import Random_agent, Compulsive_buyer_agent, Compulsive_builder_agent, \
     Compulsive_buyer_builder_agent, Compulsive_roller_agent, Buyer_then_builder_agent
-from environments import Monopoly
-
+from monopoly.environment import Monopoly, DEFAULT_SETUP
 
 class Game:
-    def __init__(self, number_of_players=6, max_turns=5000,board_file='board.csv'):
+    def __init__(self, config=DEFAULT_SETUP):
         self.default_agent = Random_agent()
         self.agents = {
             0: Random_agent(),
@@ -14,9 +13,9 @@ class Game:
             4: Compulsive_roller_agent(),
             5: Buyer_then_builder_agent()
         }
-        self.number_of_players = number_of_players
+        self.number_of_players = config['number_of_players']
         self.total_rewards = [0 for i in range(self.number_of_players)]
-        self.monopoly = Monopoly(number_of_players=number_of_players, max_turns=max_turns, board_file=board_file)
+        self.game = Monopoly(config=config)
 
     def run_games(self, number_of_games):
         for i in range(number_of_games):
@@ -34,39 +33,46 @@ class Game:
         return self.agents[player] if player in self.agents else self.default_agent
 
     def run_game(self):
-        self.monopoly.reset()
+        self.game.reset()
         terminal_state = False
-        state = self.monopoly.state()
+        state = self.game.state()
         for i in range(1, 500000):
             if terminal_state:
                 break
             current_player = state[2]
-            possible_actions = self.monopoly.possible_actions()
+            possible_actions = self.game.possible_actions()
 
             agent = self.agent_for_player(current_player)
             action = agent.select_action(state, possible_actions)
-            state, reward, terminal_state, messages = self.monopoly.step(action)
+            state, reward, terminal_state, messages = self.game.step(action)
             self.total_rewards[current_player] += reward
 
     def game_with_history(self):
         history = []
-        self.monopoly.reset()
+        self.game.reset()
         terminal_state = False
-        state = self.monopoly.state()
+        state = self.game.state()
         for i in range(1, 500000):
             if terminal_state:
-                self.monopoly.render()
+                self.game.render()
                 return history
             current_player = state[2]
-            possible_actions = self.monopoly.possible_actions()
+            possible_actions = self.game.possible_actions()
             agent = self.agent_for_player(current_player)
             action = agent.select_action(state, possible_actions)
-            state, reward, terminal_state, messages = self.monopoly.step(action)
+            state, reward, terminal_state, messages = self.game.step(action)
             _, money, _ = state[0][current_player]
             history.append((current_player, money ,action, reward))
             print('{} [{}]'.format(reward, '\n'.join(messages)))
 
 if __name__ == "__main__":
-    game = Game(board_file='board_small.csv',number_of_players=6, max_turns = 20)
+    TEST_BOARD = {
+        'board_file': 'monopoly/boards/board_small.csv',
+        'number_of_players': 6,
+        'max_money': 5000,
+        'max_turns': 1000
+    }
+    game = Game(config=TEST_BOARD)
     # game.run_games(5000)
-    print(game.game_with_history())
+    history = game.game_with_history()
+

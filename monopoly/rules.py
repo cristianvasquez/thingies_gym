@@ -27,13 +27,22 @@ Buildings_in_location = int  # 1,2,3,4,5
 Locations = List[Tuple[Owner, Buildings_in_location]]
 Current_player = int  # None + player_id
 Can_roll_dice = bool
+Current_turn = int
+Max_turns = int
+Max_money = int
+State = Tuple[Players, Locations, Current_player, Can_roll_dice, Current_turn, Max_turns, Max_money]
 
-State = Tuple[Players, Locations, Current_player, Can_roll_dice, int, int]
 
+class ClassicMonopolyRules():
+    """
+    - A player can have only max_money
 
-class MonopolicRules():
+    - When a player runs out of money, has a negative reward and his state becomes inactive.
 
-    def __init__(self, board, seed=None, max_turns=10000):
+    All players are allowed to play their last run. Their reward will be their money left.
+
+     """
+    def __init__(self, board, seed=None, max_turns=10000, max_money=100000):
 
         self.np_random, seed = seeding.np_random(seed)
 
@@ -43,6 +52,7 @@ class MonopolicRules():
                         list(range(0, board.number_of_players))]
 
         self.max_turns = max_turns
+        self.max_money = max_money
         self.current_turn = 0
 
         # Properties can have an owner, and the number of houses built.
@@ -56,9 +66,10 @@ class MonopolicRules():
         self.actions = [ROLL_DICE, BUY_PROPERTY, BUILD, END_TURN]
         self.board = board
         self.terminal_state = False
+        self.game_is_closing = False
 
     def state(self) -> State:
-        return self.players, self.locations, self.current_player, self.player_can_roll_dice, self.current_turn, self.max_turns
+        return self.players, self.locations, self.current_player, self.player_can_roll_dice, self.current_turn, self.max_turns, self.max_money
 
     def current_player_name(self):
         return self.board.player_name(self.current_player)
@@ -148,8 +159,22 @@ class MonopolicRules():
                 number_of_winners += 1
         return number_of_winners
 
+    def _max_money_reached(self):
+        for _, _money, _ in self.players:
+            if _money > self.max_money:
+                return True
+        return False
+
     def _action_end_turn(self) -> Tuple[State, Reward, Is_terminal, Any]:
         messages = []
+
+        if self.current_turn > self.max_turns and not self.game_is_closing:
+            messages.append('max_turns () reached, finishing game.'.format(self.max_turns))
+            self.game_is_closing = True
+
+        if self._max_money_reached() and not self.game_is_closing:
+            messages.append('max_money (${}) reached, finishing game.'.format(self.max_money))
+            self.game_is_closing = True
 
         location, money, active = self.players[self.current_player]
         if self.number_of_active_players() <= 1:
@@ -159,12 +184,10 @@ class MonopolicRules():
             messages.append(
                 'The game ends in turn {} with {} winners'.format(self.current_turn, self._number_of_winners()))
             return self.state(), money, self.terminal_state, messages
-        elif self.current_turn > self.max_turns:
-            # Game ran out of turns, the player gets the reward and goes not active
-            messages.append('last round ({}/{}), no more turns, player {} finishes with (${})'.format(self.current_turn,
-                                                                                                      self.max_turns,
-                                                                                                      self.current_player_name(),
-                                                                                                      money))
+        elif self.game_is_closing:
+            # Game is currently closing, the player gets the reward and becomes not active
+            messages.append('...last round, player {} finishes with (${})'.format(self.current_player_name(),
+                                                                                  money))
             self.players[self.current_player] = (location, money, False)
             self._set_next_active_player()
             return self.state(), money, self.terminal_state, messages
@@ -211,16 +234,17 @@ class MonopolicRules():
             money -= rent
             # Sometimes there is not enough money
             paid_money = money + rent if money < 0 else rent
-            if (paid_money<0):
-                raise("Error!")
+            if (paid_money < 0):
+                raise ("Error!")
 
             # Add the money to the owner
             _location, _money, _active = self.players[current_owner]
             self.players[current_owner] = (_location, _money + paid_money, _active)
             current_owner_name = self.board.player_name(current_owner)
             messages.append(
-                '{} lands in {} and pays (${}/{}) to {} '.format(self.current_player_name(), location_name, paid_money,rent,
-                                                              current_owner_name))
+                '{} lands in {} and pays (${}/{}) to {} '.format(self.current_player_name(), location_name, paid_money,
+                                                                 rent,
+                                                                 current_owner_name))
         # Simple rule:
         # If the player goes broke, returns all his properties to None
         if money < 0:

@@ -1,6 +1,13 @@
 # Monopoly gym
 
 
+## Simplifications
+
+The game ends after max_turns is reached
+
+
+
+## Plan
 1. Train an agent to play a simplified monopoly. 
 2. Watch what happens to most agents.
 3. Change the rules of monopoly, including co-owning.

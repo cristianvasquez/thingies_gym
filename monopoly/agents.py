@@ -1,6 +1,6 @@
 import random
 
-from monopoly_rules import State, Actions, BUY_PROPERTY, ROLL_DICE, END_TURN, BUILD
+from monopoly.rules import State, Actions, BUY_PROPERTY, ROLL_DICE, BUILD
 
 class Agent():
     def select_action(self,state:State,actions:Actions):
@@ -8,7 +8,6 @@ class Agent():
 
 class Random_agent(Agent):
     def select_action(self, state: State, actions: Actions):
-        players, properties, current_player, player_can_roll_dice, current_turn, max_turns = state
         return random.choice(actions)
 
 class Compulsive_buyer_agent(Agent):
@@ -46,7 +45,7 @@ class Buyer_then_builder_agent(Agent):
         self.early_game_agent = Compulsive_buyer_agent()
 
     def select_action(self, state: State, actions: Actions):
-        players, properties, current_player, player_can_roll_dice, current_turn, max_turns = state
+        players, properties, current_player, player_can_roll_dice, current_turn, max_turns, max_money = state
         if current_turn < max_turns/2:
             return self.early_game_agent.select_action(state,actions)
         else:

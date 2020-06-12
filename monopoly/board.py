@@ -5,7 +5,7 @@ from util.random_emoji import random_emoji
 
 # The classic board game
 class Board():
-    def __init__(self, board_file='board.csv', number_of_players=10):
+    def __init__(self, board_file='default.csv', number_of_players=10):
 
         # class ,name, position, monopoly, monopoly_size, price, build_cost, rent, rent_house_1, rent_house_2, rent_house_3, rent_house_4, rent_hotel, default_income
         self.specs = pd.read_csv(board_file).to_dict('records')
