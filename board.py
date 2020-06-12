@@ -62,7 +62,7 @@ class Board():
             # The tokens (players)
             for player, (player_position, money, active) in enumerate(state.players):
                 if position == player_position:
-                    tokens = tokens + '{} {}\n'.format(self.token_emojis[player][0], '(${})'.format(money) if active else 'RIP')
+                    tokens = tokens + '{} {}\n'.format(self.token_emojis[player][0], '(${})'.format(money) if int(money) > 0 else 'RIP')
 
             # The location name
             location_name = self.location_name(position)
