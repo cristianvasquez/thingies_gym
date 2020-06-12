@@ -5,7 +5,7 @@ from gym import spaces
 from gym.utils import seeding
 
 from board import Board
-from normal_rules import NormalGame
+from monopoly_rules import MonopolicRules
 
 
 class Monopoly(gym.Env):
@@ -16,7 +16,7 @@ class Monopoly(gym.Env):
         super(Monopoly, self).__init__()  # Define action and observation space
 
         self.board = Board(number_of_players=number_of_players, board_file=board_file)
-        self.game = NormalGame(board=self.board)
+        self.game = MonopolicRules(board=self.board)
         self.action_space = spaces.Discrete(len(self.game.actions))
         """
         A tuple (i.e., product) of simpler spaces
@@ -29,18 +29,16 @@ class Monopoly(gym.Env):
 
     def step(self, action):
         # Execute one time step within the environment
-        player = self.game.current_player
-        return self.game.do_action(player, action)
+        return self.game.step(action)
 
     def state(self):
         return self.game.state()
 
     def possible_actions(self):
-        player = self.game.current_player
-        return self.game.possible_actions(player)
+        return self.game.possible_actions()
 
     def reset(self):
-        self.game = NormalGame(board=self.board)
+        self.game = MonopolicRules(board=self.board)
         return self.game.state()
 
     def render(self, mode='human', close=False):
@@ -56,7 +54,7 @@ class Monopoly(gym.Env):
 monopoly = Monopoly(number_of_players=20)
 
 terminal_state = False
-for i in range(1, 500):
+for i in range(1, 500000):
     if terminal_state:
         break
     possible_actions = monopoly.possible_actions()

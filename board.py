@@ -1,31 +1,24 @@
-import random
-
-from gym.utils import seeding, colorize
-# from termcolor import colored
+from gym.utils import colorize
 from tabulate import tabulate
 from pandas import pandas as pd
-from random_emoji import random_emoji
-
+from util.random_emoji import random_emoji
 
 # The classic board game
 class Board():
     def __init__(self, board_file='board.csv', number_of_players=10):
 
-        self.board_specs = pd.read_csv(board_file).to_dict('records')
-
-        self.number_of_locations = len(self.board_specs)
+        # class ,name, position, monopoly, monopoly_size, price, build_cost, rent, rent_house_1, rent_house_2, rent_house_3, rent_house_4, rent_hotel, default_income
+        self.specs = pd.read_csv(board_file).to_dict('records')
+        self.number_of_locations = len(self.specs)
         self.number_of_players = number_of_players
         self.token_emojis = [random_emoji() for i in range(0, number_of_players + 1)]
-
-    def location(self, index):
-        return self.board_specs[index]
 
     def player_name(self, player):
         name = self.token_emojis[player][2]
         return colorize(name, 'crimson')
 
     def location_name(self, index):
-        location = self.location(index)
+        location = self.specs[index]
         color_mapping = {
             'Brown': ('magenta', True, False),
             'Dark Blue': ('blue', True, False),
@@ -45,7 +38,6 @@ class Board():
         color, bold, highlight = color_mapping[location['monopoly']]
         return (colorize(location['name'], color, highlight=highlight, bold=bold))
 
-    # class ,name, position, monopoly, monopoly_size, price, build_cost, rent, rent_house_1, rent_house_2, rent_house_3, rent_house_4, rent_hotel, default_income
     def render(self, state):
 
         buildings_mapping = {
@@ -60,7 +52,7 @@ class Board():
         headers = ["owner", "name", "tokens", "buildings", "rent"]
         table = []
 
-        for position, row in enumerate(self.board_specs):
+        for position, row in enumerate(self.specs):
             tokens = ''
             (owner, buildings) = state.properties[position]
 
@@ -70,8 +62,7 @@ class Board():
             # The tokens (players)
             for player, (player_position, money, active) in enumerate(state.players):
                 if position == player_position:
-                    (emoji, emoji_codepoint, emoji_name) = self.token_emojis[player]
-                    tokens = tokens + '{} {}\n'.format(emoji, '(${})'.format(money) if active else 'RIP')
+                    tokens = tokens + '{} {}\n'.format(self.token_emojis[player][0], '(${})'.format(money) if active else 'RIP')
 
             # The location name
             location_name = self.location_name(position)

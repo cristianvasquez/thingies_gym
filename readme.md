@@ -1,6 +1,4 @@
 
 
-Got snippets from:
-    https://github.com/aadirave/monopoly-simulator
+Board from:    
     https://github.com/jm-contreras-zz/monopoly
-
