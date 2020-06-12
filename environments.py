@@ -38,7 +38,7 @@ class Monopoly(gym.Env):
         return self.game.possible_actions()
 
     def reset(self):
-        self.game = MonopolicRules(board=self.board,max_turns=self.max_turns)
+        self.game = MonopolicRules(board=self.board, max_turns=self.max_turns)
         return self.game.state()
 
     def render(self, mode='human', close=False):

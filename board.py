@@ -41,7 +41,7 @@ class Board():
     def render(self, state):
 
         buildings_mapping = {
-            0: 'N/A',
+            0: '',
             1: '🏠',
             2: '🏠🏠',
             3: '🏠🏠🏠',
@@ -49,7 +49,7 @@ class Board():
             5: '🏨'
         }
 
-        headers = ["owner", "name", "tokens", "buildings", "rent"]
+        headers = ["owner", "name", "tokens",  "current rent", "buildings"]
         table = []
 
         for position, row in enumerate(self.specs):
@@ -68,6 +68,8 @@ class Board():
             location_name = self.location_name(position)
 
             # The buildings
-            rent_str = '{}({})'.format(state.get_rent_amount(buildings, row),buildings_mapping[buildings]) if row['class'] == 'Street' else ''
-            table.append([owner_str, location_name, tokens, rent_str ])
+            rent_str = '${}'.format(state.get_rent_amount(buildings, row)) if row['class'] == 'Street' else ''
+            buildings_str = '{}'.format(buildings_mapping[buildings])  if row['class'] == 'Street' else ''
+
+            table.append([owner_str, location_name, tokens, rent_str,buildings_str ])
         return tabulate(table, headers, tablefmt="fancy_grid")

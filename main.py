@@ -67,6 +67,6 @@ class Game:
             print('{} [{}]'.format(reward, '\n'.join(messages)))
 
 if __name__ == "__main__":
-    game = Game(board_file='board_small.csv',number_of_players=6, max_turns =60)
-    # game.run_games(50)
+    game = Game(board_file='board_small.csv',number_of_players=6, max_turns = 20)
+    # game.run_games(5000)
     print(game.game_with_history())
