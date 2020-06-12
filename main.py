@@ -4,29 +4,34 @@ from environments import Monopoly
 
 
 class Game:
-
-    def __init__(self):
+    def __init__(self, number_of_players=6, max_turns=5000,board_file='board.csv'):
+        self.default_agent = Random_agent()
         self.agents = {
-            1: Random_agent(),
-            2: Compulsive_buyer_agent(),
-            3: Compulsive_builder_agent(),
-            4: Compulsive_buyer_builder_agent(),
-            5: Compulsive_roller_agent(),
-            6: Buyer_then_builder_agent()
+            0: Random_agent(),
+            1: Compulsive_buyer_agent(),
+            2: Compulsive_builder_agent(),
+            3: Compulsive_buyer_builder_agent(),
+            4: Compulsive_roller_agent(),
+            5: Buyer_then_builder_agent()
         }
-        self.total_rewards = [0 for i, _ in enumerate(self.agents)]
-        self.number_of_players = len(self.agents)
-        self.monopoly = Monopoly(number_of_players=6, max_turns=300)
+        self.number_of_players = number_of_players
+        self.total_rewards = [0 for i in range(self.number_of_players)]
+        self.monopoly = Monopoly(number_of_players=number_of_players, max_turns=max_turns, board_file=board_file)
 
     def run_games(self, number_of_games):
         for i in range(number_of_games):
+            if (i % 10)==0:
+                print('played {}/{}'.format(i,number_of_games))
             self.run_game()
 
         print("Average of reward over {} games".format(number_of_games))
-        for i, agent in enumerate(self.agents):
+        for i in range(self.number_of_players):
             average = self.total_rewards[i] / number_of_games
-            agent_type = type(self.agents[agent])
+            agent_type = type(self.agent_for_player(i))
             print("{} average: {}".format(agent_type, average))
+
+    def agent_for_player(self,player):
+        return self.agents[player] if player in self.agents else self.default_agent
 
     def run_game(self):
         self.monopoly.reset()
@@ -37,9 +42,11 @@ class Game:
                 break
             current_player = state[2]
             possible_actions = self.monopoly.possible_actions()
-            action = self.agents[current_player].select_action(state, possible_actions)
+
+            agent = self.agent_for_player(current_player)
+            action = agent.select_action(state, possible_actions)
             state, reward, terminal_state, messages = self.monopoly.step(action)
-            self.total_rewards[current_player - 1] += reward
+            self.total_rewards[current_player] += reward
 
     def game_with_history(self):
         history = []
@@ -52,14 +59,14 @@ class Game:
                 return history
             current_player = state[2]
             possible_actions = self.monopoly.possible_actions()
-            action = self.agents[current_player].select_action(state, possible_actions)
+            agent = self.agent_for_player(current_player)
+            action = agent.select_action(state, possible_actions)
             state, reward, terminal_state, messages = self.monopoly.step(action)
             _, money, _ = state[0][current_player]
             history.append((current_player, money ,action, reward))
             print('{} [{}]'.format(reward, '\n'.join(messages)))
 
-
 if __name__ == "__main__":
-    game = Game()
-    # game.run_games(1000)
-    print(game.game_with_history())
+    game = Game(board_file='board_small.csv',number_of_players=6, max_turns =30000)
+    game.run_games(50)
+    # print(game.game_with_history())

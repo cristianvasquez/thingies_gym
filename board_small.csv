@@ -1,0 +1,21 @@
+class,name,position,monopoly,monopoly_size,price,build_cost,rent,rent_house_1,rent_house_2,rent_house_3,rent_house_4,rent_hotel,default_income
+Idle,Go,1,None,0,0,0,0,0,0,0,0,0,200
+Street,Mediterranean Avenue,2,Brown,2,60,50,2,10,30,90,160,250,0
+Chest,Community Chest,3,None,0,0,0,0,0,0,0,0,0,0
+Railroad,Reading Railroad,6,Railroad,4,200,0,25,0,0,0,0,0,0
+Street,Vermont Avenue,9,Light Blue,3,100,50,6,30,90,270,400,550,0
+Utility,Electric Company,13,Utility,2,150,0,4,0,0,0,0,0,0
+Street,Virginia Avenue,15,Pink,3,160,100,12,60,180,500,700,900,0
+Chest,Community Chest,18,None,0,0,0,0,0,0,0,0,0,0
+Street,New York Avenue,20,Orange,3,200,100,16,80,220,600,800,1000,0
+Street,Kentucky Avenue,22,Red,3,220,150,18,90,250,700,875,1050,0
+Street,Indiana Avenue,24,Red,3,220,150,18,90,250,700,875,1050,0
+Railroad,B. & O. Railroad,26,Railroad,4,200,0,25,0,0,0,0,0,0
+Utility,Water Works,29,Utility,2,150,0,4,0,0,0,0,0,0
+Street,Pacific Avenue,32,Green,3,300,200,26,130,390,900,1100,1275,0
+Street,North Carolina Avenue,33,Green,3,300,200,26,130,390,900,1100,1275,0
+Chest,Community Chest,34,None,0,0,0,0,0,0,0,0,0,0
+Chance,Chance,37,None,0,0,0,0,0,0,0,0,0,0
+Street,Park Place,38,Dark Blue,2,350,200,35,175,500,1100,1300,1500,0
+Tax,Luxury Tax,39,None,0,0,0,0,0,0,0,0,0,-100
+Street,Boardwalk,40,Dark Blue,2,400,200,50,200,600,1400,1700,2000,0

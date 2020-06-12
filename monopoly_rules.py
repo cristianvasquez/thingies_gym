@@ -18,17 +18,17 @@ Is_terminal = bool
 Actions = List[int]
 
 # The game state
-Position = int
+Position = int  # location_id
 Money = int
-Active = int
+Active = bool
 Players = List[Tuple[Position, Money, Active]]
-Owner = int
-Buildings_in_property = int
-Properties = List[Tuple[Owner, Buildings_in_property]]
-Current_player = int
+Owner = Any  # None + player_id
+Buildings_in_location = int  # 1,2,3,4,5
+Locations = List[Tuple[Owner, Buildings_in_location]]
+Current_player = int  # None + player_id
 Can_roll_dice = bool
 
-State = Tuple[Players, Properties, Current_player, Can_roll_dice, int, int]
+State = Tuple[Players, Locations, Current_player, Can_roll_dice, int, int]
 
 
 class MonopolicRules():
@@ -40,17 +40,14 @@ class MonopolicRules():
         # Players
         # (position, money, active_status)
         self.players = [(INITIAL_POSITION, PLAYERS_INITIAL_MONEY, True) for i in
-                        list(range(0, board.number_of_players + 1))]
+                        list(range(0, board.number_of_players))]
 
         self.max_turns = max_turns
         self.current_turn = 0
 
-        # by default, the bank is a player 0
-        self.players[0] = (None, 0, False)
-
         # Properties can have an owner, and the number of houses built.
         # (owner_id,houses_built)
-        self.properties = [(0, 0) for i in list(range(0, board.number_of_locations))]
+        self.locations = [(None, 0) for i in list(range(0, board.number_of_locations))]
 
         # Current player
         self.current_player = STARTING_PLAYER
@@ -61,7 +58,7 @@ class MonopolicRules():
         self.terminal_state = False
 
     def state(self) -> State:
-        return self.players, self.properties, self.current_player, self.player_can_roll_dice, self.current_turn, self.max_turns
+        return self.players, self.locations, self.current_player, self.player_can_roll_dice, self.current_turn, self.max_turns
 
     def current_player_name(self):
         return self.board.player_name(self.current_player)
@@ -70,7 +67,7 @@ class MonopolicRules():
         actions = []
         location, money, active = self.players[self.current_player]
 
-        # No actions if the player is not active
+        # Should not be triggered if the player is not active
         if not active:
             raise Exception("Non active player requested actions {}".format(self.state()))
 
@@ -80,13 +77,13 @@ class MonopolicRules():
         else:
             actions.append(END_TURN)
 
-        current_owner, number_of_houses = self.properties[location]
+        current_owner, number_of_houses = self.locations[location]
         spec = self.board.specs[location]
 
         # Only can buy in any of the 'properties'
         if spec['class'] in ['Street', 'Railroad', 'Utility']:
-            # Can buy the property if the owner is the bank
-            if current_owner == 0:
+            # Can buy the property if None is the owner
+            if current_owner == None:
                 # And has enough money
                 if (int(spec['price']) <= money):
                     actions.append(BUY_PROPERTY)
@@ -115,20 +112,19 @@ class MonopolicRules():
         return active_players
 
     def _set_next_active_player(self) -> None:
-        if self.number_of_active_players() == 0:
-            self.current_player =  None
-            return None
-
         def next_player(current):
             current += 1
-            if current > len(self.players) - 1:
-                current = 1
+            if current >= len(self.players):
+                current = 0
             _, _, active = self.players[current]
             return current if active else next_player(current)
 
-        self.current_turn += 1
-        self.current_player = next_player(self.current_player)
-        self.player_can_roll_dice = True
+        if self.number_of_active_players() == 0:
+            self.terminal_state = True
+        else:
+            self.current_turn += 1
+            self.current_player = next_player(self.current_player)
+            self.player_can_roll_dice = True
 
     def step(self, action) -> Tuple[State, Reward, Is_terminal, Any]:
         possible_actions = self.possible_actions()
@@ -165,13 +161,17 @@ class MonopolicRules():
             return self.state(), money, self.terminal_state, messages
         elif self.current_turn > self.max_turns:
             # Game ran out of turns, the player gets the reward and goes not active
-            messages.append('player {} finishes with (${})'.format(self.current_player_name(), money))
+            messages.append('last round ({}/{}), no more turns, player {} finishes with (${})'.format(self.current_turn,
+                                                                                                      self.max_turns,
+                                                                                                      self.current_player_name(),
+                                                                                                      money))
             self.players[self.current_player] = (location, money, False)
             self._set_next_active_player()
             return self.state(), money, self.terminal_state, messages
         else:
             # Player finishes turn, and turn goes to next_active_player
-            messages.append('{} ends the turn'.format(self.current_player_name()))
+            messages.append(
+                '{} ends turn ({}/{}) '.format(self.current_player_name(), self.current_turn, self.max_turns))
             self._set_next_active_player()
             return self.state(), 0, self.terminal_state, messages
 
@@ -186,10 +186,10 @@ class MonopolicRules():
         location += dice
 
         # If player goes through GO, receives some money
-        if location > 39:
-            location -= 40
+        if location > len(self.locations) - 1:
+            location -= len(self.locations)
             money += GO_INCOME
-            messages.append('{} pass through GO ({})'.format(self.current_player_name(), GO_INCOME))
+            messages.append('{} pass through GO (${})'.format(self.current_player_name(), GO_INCOME))
 
         spec = self.board.specs[location]
         location_name = self.board.location_name(location)
@@ -202,38 +202,36 @@ class MonopolicRules():
             messages.append('{} pays/receives: (${}) '.format(self.current_player_name(), default_income))
 
         # Has to pay rent if the property is already owned
-        current_owner, number_of_houses = self.properties[location]
-        if (current_owner != self.current_player) & (current_owner != 0):
+        current_owner, number_of_houses = self.locations[location]
+        if current_owner != None and current_owner != self.current_player:
             location_name = self.board.location_name(location)
             rent = self.get_rent_amount(number_of_houses, spec)
 
             # Pay the rent
             money -= rent
+            # Sometimes there is not enough money
+            paid_money = money + rent if money < 0 else rent
+            if (paid_money<0):
+                raise("Error!")
 
             # Add the money to the owner
             _location, _money, _active = self.players[current_owner]
-            self.players[current_owner] = (_location, _money + rent, _active)
+            self.players[current_owner] = (_location, _money + paid_money, _active)
             current_owner_name = self.board.player_name(current_owner)
             messages.append(
-                '{} lands in {} and pays (${}) to {} '.format(self.current_player_name(), location_name, rent,
+                '{} lands in {} and pays (${}/{}) to {} '.format(self.current_player_name(), location_name, paid_money,rent,
                                                               current_owner_name))
         # Simple rule:
-        # If the player goes broke, returns all his properties to the bank
+        # If the player goes broke, returns all his properties to None
         if money < 0:
-            for i, (owner, number_of_houses) in enumerate(self.properties):
+            for i, (owner, number_of_houses) in enumerate(self.locations):
                 if owner == self.current_player:
                     messages.append(
                         '{} returns {} to the bank'.format(self.current_player_name(), self.board.location_name(i)))
-                    self.properties[i] = (0, 0)
+                    self.locations[i] = (None, 0)
             messages.append('{} is out!'.format(self.current_player_name()))
-            active = False
-            self.players[self.current_player] = (location, money, active)
+            self.players[self.current_player] = (location, money, False)
             self._set_next_active_player()  # The player auto-ends
-
-            # In super rare occasions, all players go broke.
-            if self.number_of_active_players() == 0:
-                self.terminal_state = True
-                messages.append('The game ends... and everyone is a loser')
 
             # If you go broke, the reward is negative
             return self.state(), money, self.terminal_state, messages
@@ -251,8 +249,8 @@ class MonopolicRules():
         self.players[self.current_player] = (location, money - int(spec['price']), active)
 
         # Update the property owner
-        current_owner, number_of_houses = self.properties[location]
-        self.properties[location] = (self.current_player, number_of_houses)
+        current_owner, number_of_houses = self.locations[location]
+        self.locations[location] = (self.current_player, number_of_houses)
 
         messages = []
         messages.append('{} buys {}'.format(self.current_player_name(), self.board.location_name(location)))
@@ -268,8 +266,8 @@ class MonopolicRules():
         self.players[self.current_player] = (location, money - int(spec['build_cost']), active)
 
         # Update the houses
-        current_owner, number_of_houses = self.properties[location]
-        self.properties[location] = (current_owner, number_of_houses + 1)
+        current_owner, number_of_houses = self.locations[location]
+        self.locations[location] = (current_owner, number_of_houses + 1)
 
         messages = []
         messages.append('{} builds in {}'.format(self.current_player_name(), self.board.location_name(location)))

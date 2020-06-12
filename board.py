@@ -54,10 +54,10 @@ class Board():
 
         for position, row in enumerate(self.specs):
             tokens = ''
-            (owner, buildings) = state.properties[position]
+            (owner, buildings) = state.locations[position]
 
             # The owner
-            owner_str = '' if owner == 0 else self.token_emojis[owner][0]
+            owner_str = '' if owner == None else self.token_emojis[owner][0]
 
             # The tokens (players)
             for player, (player_position, money, active) in enumerate(state.players):

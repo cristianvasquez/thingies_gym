@@ -1,8 +1,6 @@
 import random
-from unittest import TestCase
 
 from board import Board
-from main import Game
 from monopoly_rules import MonopolicRules
 from monopoly_rules import ROLL_DICE, BUY_PROPERTY, BUILD, END_TURN
 
@@ -41,8 +39,8 @@ def test_all_positions_visited():
         state, reward, terminal_state, messages = game.step(action)
         for player_position, _, _ in state[0]:
             locations_visited = locations_visited.union([player_position])
-
-    assert len(locations_visited) == board.number_of_locations + 1 # Counts None, from the bank
+    print(locations_visited,board.number_of_locations)
+    assert len(locations_visited) == board.number_of_locations # Counts None, from the bank
 
 if __name__ == "__main__":
 
