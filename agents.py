@@ -47,7 +47,7 @@ class Buyer_then_builder_agent(Agent):
 
     def select_action(self, state: State, actions: Actions):
         players, properties, current_player, player_can_roll_dice, current_turn, max_turns = state
-        if current_turn < max_turns:
+        if current_turn < max_turns/2:
             return self.early_game_agent.select_action(state,actions)
         else:
             return  self.late_game_agent.select_action(state,actions)
