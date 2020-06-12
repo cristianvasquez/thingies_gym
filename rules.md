@@ -1,3 +1,9 @@
+# Board
+
+I took the board from:
+
+https://github.com/jm-contreras-zz/monopoly
+    
 # Rules
 
 From: https://en.wikibooks.org/wiki/Monopoly/Official_Rules
