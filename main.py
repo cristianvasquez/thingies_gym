@@ -2,6 +2,7 @@ from agents import Random_agent, Compulsive_buyer_agent, Compulsive_builder_agen
     Compulsive_buyer_builder_agent, Compulsive_roller_agent, Buyer_then_builder_agent
 from environments import Monopoly
 
+
 class Game:
 
     def __init__(self):
@@ -19,7 +20,7 @@ class Game:
 
     def run_games(self, number_of_games):
         for i in range(number_of_games):
-            self.run_game(render=False)
+            self.run_game()
 
         print("Average of reward over {} games".format(number_of_games))
         for i, agent in enumerate(self.agents):
@@ -27,24 +28,38 @@ class Game:
             agent_type = type(self.agents[agent])
             print("{} average: {}".format(agent_type, average))
 
-    def run_game(self, render=False):
+    def run_game(self):
         self.monopoly.reset()
         terminal_state = False
         state = self.monopoly.state()
         for i in range(1, 500000):
             if terminal_state:
-
-                if (render):
-                    print(self.monopoly.render())
                 break
             current_player = state[2]
             possible_actions = self.monopoly.possible_actions()
             action = self.agents[current_player].select_action(state, possible_actions)
             state, reward, terminal_state, messages = self.monopoly.step(action)
             self.total_rewards[current_player - 1] += reward
-            # print('{} [{}]'.format(reward, '\n'.join(messages)))
+
+    def game_with_history(self):
+        history = []
+        self.monopoly.reset()
+        terminal_state = False
+        state = self.monopoly.state()
+        for i in range(1, 500000):
+            if terminal_state:
+                self.monopoly.render()
+                return history
+            current_player = state[2]
+            possible_actions = self.monopoly.possible_actions()
+            action = self.agents[current_player].select_action(state, possible_actions)
+            state, reward, terminal_state, messages = self.monopoly.step(action)
+            _, money, _ = state[0][current_player]
+            history.append((current_player, money ,action, reward))
+            print('{} [{}]'.format(reward, '\n'.join(messages)))
+
 
 if __name__ == "__main__":
     game = Game()
-    game.run_games(1000)
-
+    # game.run_games(1000)
+    print(game.game_with_history())

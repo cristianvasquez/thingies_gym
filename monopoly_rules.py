@@ -18,8 +18,13 @@ Is_terminal = bool
 Actions = List[int]
 
 # The game state
-Players = List[Tuple[int, int, bool]]
-Properties = List[Tuple[int, int]]
+Position = int
+Money = int
+Active = int
+Players = List[Tuple[Position, Money, Active]]
+Owner = int
+Buildings_in_property = int
+Properties = List[Tuple[Owner, Buildings_in_property]]
 Current_player = int
 Can_roll_dice = bool
 
@@ -228,6 +233,7 @@ class MonopolicRules():
             # In super rare occasions, all players go broke.
             if self.number_of_active_players() == 0:
                 self.terminal_state = True
+                messages.append('The game ends... and everyone is a loser')
 
             # If you go broke, the reward is negative
             return self.state(), money, self.terminal_state, messages
