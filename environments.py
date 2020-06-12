@@ -60,7 +60,7 @@ for i in range(1, 500000):
     possible_actions = monopoly.possible_actions()
     action = random.choice(possible_actions)
     state, reward, terminal_state, messages = monopoly.step(action)
-    print('\n'.join(messages))
+    print('{} [{}]'.format(reward,'\n'.join(messages)))
     # print(state)
 print('last turn: {}'.format(i))
 monopoly.render()

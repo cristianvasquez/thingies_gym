@@ -25,6 +25,7 @@ Can_roll_dice = bool
 
 State = Tuple[Players, Properties, Current_player, Can_roll_dice]
 
+
 class MonopolicRules():
 
     def __init__(self, board, seed=None):
@@ -104,14 +105,24 @@ class MonopolicRules():
     def roll_dice(self) -> int:
         return self.np_random.randint(1, 13)
 
-    def is_terminal_state(self) -> bool:
-        """ The game is a terminal state if one player (or less) are active
-        """
+    def number_of_active_players(self) -> int:
         active_players = 0
         for (_, _, active) in self.players:
             if active:
                 active_players += 1
-        return True if active_players <= 1 else False
+        return active_players
+
+    def _next_active_player(self):
+        if self.number_of_active_players() == 0:
+            return None
+
+        def next_player(current):
+            current += 1
+            if current > len(self.players) - 1:
+                current = 1
+            _, _, active = self.players[current]
+            return current if active else next_player(current)
+        return next_player(self.current_player)
 
     def step(self, action) -> Tuple[State, Reward, Is_terminal, Any]:
         possible_actions = self.possible_actions()
@@ -128,6 +139,22 @@ class MonopolicRules():
         elif action == ROLL_DICE:
             return self._action_roll_dice()
 
+    def _action_end_turn(self):
+
+        messages = []
+        messages.append('{} ends the turn'.format(self.current_player_name()))
+
+        if self.number_of_active_players()<=1:
+            # There is only one, and the reward is the money
+            _, money, _ = self.players[self.current_player]
+            self.terminal_state = True
+            messages.append('the game ends')
+            return self.state(), money, self.terminal_state, messages
+        else:
+            self.current_player = self._next_active_player()
+            self.player_can_roll_dice = True
+            return self.state(), 0, self.terminal_state, messages
+
     def _action_roll_dice(self) -> Tuple[State, Reward, Is_terminal, Any]:
         """Doc
          """
@@ -136,7 +163,6 @@ class MonopolicRules():
 
         dice = self.roll_dice()
         self.player_can_roll_dice = False
-        messages.append('{} rolls {} '.format(self.current_player_name(), dice))
         location += dice
 
         # If player goes through GO, receives some money
@@ -146,13 +172,14 @@ class MonopolicRules():
             messages.append('{} pass through GO ({})'.format(self.current_player_name(), GO_INCOME))
 
         spec = self.board.specs[location]
+        location_name = self.board.location_name(location)
+        messages.append('{} rolls {} and lands in {}'.format(self.current_player_name(), dice, location_name))
 
         # Some properties have a default income that can be positive or negative
         default_income = int(spec['default_income'])
         if default_income != 0:
             money += default_income
-            location_name = self.board.location_name(location)
-            messages.append('{} lands in {} ({}) '.format(self.current_player_name(), location_name, default_income))
+            messages.append('{} pays/receives: {} '.format(self.current_player_name(), default_income))
 
         # Has to pay rent if the property is already owned
         current_owner, number_of_houses = self.properties[location]
@@ -180,11 +207,13 @@ class MonopolicRules():
                     self.properties[i] = (0, 0)
             messages.append('{} is out!'.format(self.current_player_name()))
             active = False
-
-        self.players[self.current_player] = (location, money, active)
-
-        # If you go broke, the reward is negative
-        return self.state(), 0 if active else -1000, self.terminal_state, messages
+            self.players[self.current_player] = (location, money, active)
+            self.current_player = self._next_active_player() # The player auto-ends
+            # If you go broke, the reward is negative
+            return self.state(), -1000, self.terminal_state, messages
+        else:
+            self.players[self.current_player] = (location, money, active)
+            return self.state(), 0, self.terminal_state, messages
 
     def _action_buy_property(self):
         """Doc
@@ -218,25 +247,6 @@ class MonopolicRules():
 
         messages = []
         messages.append('{} builds in {}'.format(self.current_player_name(), self.board.location_name(location)))
-        return self.state(), 0, self.terminal_state, messages
-
-    def _action_end_turn(self):
-        def next_player(current):
-            current += 1
-            if current > len(self.players) - 1:
-                current = 1
-            _, _, active = self.players[current]
-            return current if active else next_player(current)
-
-        messages = []
-        messages.append('{} ends the turn'.format(self.current_player_name()))
-
-        if self.is_terminal_state():
-            self.terminal_state = True
-            messages.append('the game ends')
-        else:
-            self.current_player = next_player(self.current_player)
-            self.player_can_roll_dice = True
         return self.state(), 0, self.terminal_state, messages
 
     def get_rent_amount(self, number_of_houses, spec):
