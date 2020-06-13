@@ -73,6 +73,6 @@ if __name__ == "__main__":
         'max_turns': 1000
     }
     game = Game(config=TEST_BOARD)
-    # game.run_games(5000)
-    history = game.game_with_history()
+    game.run_games(10000)
+    # history = game.game_with_history()
 
