@@ -112,12 +112,12 @@ class Winter_is_coming_renderer:
             spot = ' '
             for i, ((_x, _y), owner, buy_price, rent_price) in enumerate(houses):
                 if x == _x and y == _y:
-                    spot += '\n{}[{}]'.format('House',i)
+                    spot += '\n{}[{}]'.format('House', i)
 
             for i, ((_x, _y), credits, actions_left, active_player) in enumerate(players):
                 if x == _x and y == _y:
                     player_name = self.token_emojis[i][2]
-                    spot += '\n{}[{}]'.format('Player',i)
+                    spot += '\n{}[{}]'.format('Thingy', i)
 
             return spot
 
