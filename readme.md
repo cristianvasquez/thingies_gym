@@ -1,6 +1,6 @@
 # Thingy's grid-world
 
-This gridworld is full of thingies that love apples.
+This grid world is full of thingies that love apples.
 
 ## Base rules
 
@@ -8,14 +8,14 @@ This gridworld is full of thingies that love apples.
 * Thingies spend apples to move around.
 * From time to time, trees with apples appear in the grid
 * Thingies can collect apples from the trees
-* A thingy that don't have any apple left, dies
+* A thingy that doesn't have any apple left dies
 * Thingies can perform actions per turn simultaneously. Each turn the order of execution is selected randomly
 
 ## Winter is coming ruleset
 
 * From time to time, the season switches between summer and winter. 
-* When is summer, more apples appear in the trees, and less apples are needed to survive.
-* When is winter, less apples appear in the trees, and more apples are needed to survive.
+* When is summer, more apples appear in the trees, and fewer apples are needed to survive.
+When it is winter, fewer apples appear in the trees, and more apples are needed to survive.
 
 ## Houses ruleset
 
@@ -25,8 +25,8 @@ This gridworld is full of thingies that love apples.
 
 ## Rent and buy ruleset
 
-* A thingy can buy a 'Wild' house, paying a a one-time fee in apples. The house becomes 'Owned'
-* If a thingy stays in a 'Owned' house, pays apples to the owner.
+* A thingy can buy a 'Wild' house, paying a one-time fee in apples. The house becomes 'Owned'
+* If a thingy stays in an 'Owned' house, pays apples to the owner.
 
 ## Fractional ownership ruleset
 
@@ -57,7 +57,7 @@ This gridworld is full of thingies that love apples.
 A combination of:
 
 - points each turn the thingy is alive. (survival)
-- points each turn their offsprings are alive 
+- points each turn their offsprings are still alive 
 - points proportional to gathered apples. 
 
 ## Installation
