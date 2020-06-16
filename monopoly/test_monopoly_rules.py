@@ -27,7 +27,7 @@ def test_all_actions_are_proposed(possible_actions_history):
 
 
 def test_all_positions_visited():
-    board = Board(number_of_players=6, board_file='monopoly/default.csv')
+    board = Board(number_of_players=20, board_file='monopoly/boards/default.csv')
     game = ClassicMonopolyRules(board=board)
     terminal_state = False
     locations_visited = set()
@@ -40,11 +40,11 @@ def test_all_positions_visited():
         for player_position, _, _ in state[0]:
             locations_visited = locations_visited.union([player_position])
     print(locations_visited,board.number_of_locations)
-    assert len(locations_visited) == board.number_of_locations # Counts None, from the bank
+    assert len(locations_visited) == board.number_of_locations
 
 if __name__ == "__main__":
 
-    board = Board(number_of_players=6, board_file='monopoly/default.csv')
+    board = Board(number_of_players=6, board_file='monopoly/boards/default.csv')
     game = ClassicMonopolyRules(board=board)
 
     terminal_state = False

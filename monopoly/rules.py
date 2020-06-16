@@ -1,3 +1,4 @@
+from enum import Enum, unique
 from typing import Any, List, Tuple
 
 from gym.utils import seeding, colorize
@@ -12,25 +13,27 @@ INITIAL_POSITION = 0
 STARTING_PLAYER = 1
 PLAYERS_INITIAL_MONEY = 1500
 
-# Types
-Reward = int
-Is_terminal = bool
-Actions = List[int]
+class types():
+    # Types
+    Reward = int
+    Is_terminal = bool
+    Actions = List[int]
 
-# The game state
-Position = int  # location_id
-Money = int
-Active = bool
-Players = List[Tuple[Position, Money, Active]]
-Owner = Any  # None + player_id
-Buildings_in_location = int  # 1,2,3,4,5
-Locations = List[Tuple[Owner, Buildings_in_location]]
-Current_player = int  # None + player_id
-Can_roll_dice = bool
-Current_turn = int
-Max_turns = int
-Max_money = int
-State = Tuple[Players, Locations, Current_player, Can_roll_dice, Current_turn, Max_turns, Max_money]
+    # The game state
+    Position = int  # location_id
+    Money = int
+    Active = bool
+    Players = List[Tuple[Position, Money, Active]]
+    Owner = Any  # None + player_id
+    Buildings_in_location = int  # 1,2,3,4,5
+    Locations = List[Tuple[Owner, Buildings_in_location]]
+    Current_player = int  # None + player_id
+    Can_roll_dice = bool
+    Current_turn = int
+    Max_turns = int
+    Max_money = int
+    State = Tuple[Players, Locations, Current_player, Can_roll_dice, Current_turn, Max_turns, Max_money]
+    Step_response = Tuple[State, Reward, Is_terminal, Any]
 
 
 class ClassicMonopolyRules():
@@ -63,18 +66,18 @@ class ClassicMonopolyRules():
         self.current_player = STARTING_PLAYER
         self.player_can_roll_dice = True
 
-        self.actions = [ROLL_DICE, BUY_PROPERTY, BUILD, END_TURN]
+        self.actions = [ROLL_DICE,BUY_PROPERTY,BUILD,END_TURN]
         self.board = board
         self.terminal_state = False
         self.game_is_closing = False
 
-    def state(self) -> State:
+    def state(self) -> types.State:
         return self.players, self.locations, self.current_player, self.player_can_roll_dice, self.current_turn, self.max_turns, self.max_money
 
     def current_player_name(self):
         return self.board.player_name(self.current_player)
 
-    def possible_actions(self) -> Actions:
+    def possible_actions(self) -> types.Actions:
         actions = []
         location, money, active = self.players[self.current_player]
 
@@ -137,7 +140,7 @@ class ClassicMonopolyRules():
             self.current_player = next_player(self.current_player)
             self.player_can_roll_dice = True
 
-    def step(self, action) -> Tuple[State, Reward, Is_terminal, Any]:
+    def step(self, action) -> types.Step_response:
         possible_actions = self.possible_actions()
 
         if action not in possible_actions:
@@ -165,7 +168,7 @@ class ClassicMonopolyRules():
                 return True
         return False
 
-    def _action_end_turn(self) -> Tuple[State, Reward, Is_terminal, Any]:
+    def _action_end_turn(self) -> types.Step_response:
         messages = []
 
         if self.current_turn > self.max_turns and not self.game_is_closing:
@@ -198,7 +201,7 @@ class ClassicMonopolyRules():
             self._set_next_active_player()
             return self.state(), 0, self.terminal_state, messages
 
-    def _action_roll_dice(self) -> Tuple[State, Reward, Is_terminal, Any]:
+    def _action_roll_dice(self) -> types.Step_response:
         """Doc
          """
         messages = []
@@ -263,7 +266,7 @@ class ClassicMonopolyRules():
             self.players[self.current_player] = (location, money, active)
             return self.state(), 0, self.terminal_state, messages
 
-    def _action_buy_property(self) -> Tuple[State, Reward, Is_terminal, Any]:
+    def _action_buy_property(self) -> types.Step_response:
         """Doc
          """
         location, money, active = self.players[self.current_player]
@@ -280,7 +283,7 @@ class ClassicMonopolyRules():
         messages.append('{} buys {}'.format(self.current_player_name(), self.board.location_name(location)))
         return self.state(), 0, self.terminal_state, messages
 
-    def _action_build(self) -> Tuple[State, Reward, Is_terminal, Any]:
+    def _action_build(self) -> types.Step_response:
         """Doc
         """
         location, money, active = self.players[self.current_player]

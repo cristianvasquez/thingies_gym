@@ -3,6 +3,7 @@ from tabulate import tabulate
 from pandas import pandas as pd
 from util.random_emoji import random_emoji
 
+
 # The classic board game
 class Board():
     def __init__(self, board_file='default.csv', number_of_players=10):
@@ -49,7 +50,7 @@ class Board():
             5: '🏨'
         }
 
-        headers = ["owner", "name", "tokens",  "current rent", "buildings"]
+        headers = ["owner", "name", "tokens", "current rent", "buildings"]
         table = []
 
         for position, row in enumerate(self.specs):
@@ -62,14 +63,15 @@ class Board():
             # The tokens (players)
             for player, (player_position, money, active) in enumerate(state.players):
                 if position == player_position:
-                    tokens = tokens + '{} {}\n'.format(self.token_emojis[player][0], '(${})'.format(money) if int(money) > 0 else 'RIP')
+                    tokens = tokens + '{} {}\n'.format(self.token_emojis[player][0],
+                                                       '(${})'.format(money) if int(money) > 0 else 'RIP')
 
             # The location name
             location_name = self.location_name(position)
 
             # The buildings
             rent_str = '${}'.format(state.get_rent_amount(buildings, row)) if row['class'] == 'Street' else ''
-            buildings_str = '{}'.format(buildings_mapping[buildings])  if row['class'] == 'Street' else ''
+            buildings_str = '{}'.format(buildings_mapping[buildings]) if row['class'] == 'Street' else ''
 
-            table.append([owner_str, location_name, tokens, rent_str,buildings_str ])
+            table.append([owner_str, location_name, tokens, rent_str, buildings_str])
         return tabulate(table, headers, tablefmt="fancy_grid")

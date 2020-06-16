@@ -9,7 +9,10 @@ This grid world is full of thingies that love apples.
 * From time to time, trees with apples appear in the grid
 * Thingies can collect apples from the trees
 * A thingy that doesn't have any apple left dies
-* Thingies can perform actions per turn simultaneously. Each turn the order of execution is selected randomly
+* Thingies can perform a fixed number of actions each turn. 
+* The order in which thingies play is randomly chosen.
+
+* No more than one house or tree is allowed in the same spot.
 
 ## Winter is coming ruleset
 
