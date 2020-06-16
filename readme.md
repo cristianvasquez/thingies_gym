@@ -18,7 +18,7 @@ This grid world is full of thingies that love apples.
 
 * From time to time, the season switches between summer and winter. 
 * When is summer, more apples appear in the trees, and fewer apples are needed to survive.
-When it is winter, fewer apples appear in the trees, and more apples are needed to survive.
+* When it is winter, fewer apples appear in the trees, and more apples are needed to survive.
 
 ## Houses ruleset
 
@@ -34,7 +34,7 @@ When it is winter, fewer apples appear in the trees, and more apples are needed 
 ## Fractional ownership ruleset
 
 * A thingy can occupy a 'Wild' house gaining 'ownership' proportional to the stay. The house becomes 'Fractional'
-* All thingies, owners or not, pay rent in 'Fractional' houses. Apples go proportionally to the previous owners.
+* All thingies, owners or not, pay rent in 'Fractional' houses. Paid apples go proportionally to the previous owners.
 
 # Life if not eternal ruleset
 
@@ -42,16 +42,16 @@ When it is winter, fewer apples appear in the trees, and more apples are needed 
 
 ## Offsprings ruleset
 
-* Thingys can have little thingies
+* Thingy's can have little thingies
 
 - Variants:
-* 'Owned' houses can be inherited or not
-* 'Fractional' houses can be inherited or not
+* In case of death, 'Owned' houses can be inherited by the first child
+* In case of death, 'Fractional' houses can be inherited by the first child
 
-## Other ideas
+## Next?
 
 * Thingies can plant trees, paying in apples
-* Thingies can buy trees, paying in apples
+* Thingies can 'own' the trees they plant
 * Thingies can build barricades, paying in apples
 * Thingies can give away apples to other thingies
 
@@ -59,9 +59,11 @@ When it is winter, fewer apples appear in the trees, and more apples are needed 
 
 A combination of:
 
-- points each turn the thingy is alive. (survival)
+- points each turn the thingy is still alive
 - points each turn their offsprings are still alive 
-- points proportional to gathered apples. 
+- points proportional to gathered apples.
+
+- punishment if they die
 
 ## Installation
 
