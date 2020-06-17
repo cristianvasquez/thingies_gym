@@ -89,7 +89,8 @@ def distribution(state, normalize=False):
 if __name__ == "__main__":
     current_player_id,state  = game.random_state()
     print(state)
-    flatten = distribution_wrt_player(current_player_id,state, normalize=False)
+    flatten = distribution_wrt_player(current_player_id,state, normalize=True)
+    print(len(flatten))
     print(flatten)
 
 # tic = time.perf_counter()

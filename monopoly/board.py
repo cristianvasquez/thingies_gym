@@ -1,7 +1,7 @@
 from gym.utils import colorize
 from tabulate import tabulate
 from pandas import pandas as pd
-from util.random_emoji import random_emoji
+from lib.random_emoji import random_emoji
 
 
 # The classic board game
