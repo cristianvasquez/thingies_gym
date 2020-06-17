@@ -29,10 +29,36 @@ DEFAULT_SETUP = {
     'reward_function': DEFAULT_REWARD_FUNCTION
 }
 
-MINI_SETUP = {
+MINI_SETUP_TWO_PLAYERS = {
     'grid_size_x': 5,
     'grid_size_y': 5,
     'number_of_players': 2,
+    'number_of_houses': 3,
+    'number_of_trees': 3,
+    'initial_player_apples': 20,
+    'apple_gathering_capacity': 5,
+    'initial_apples_per_tree': 10,
+    'actions_per_turn': 1,
+    'turns_between_seasons': 3,
+    'summer': {
+        'move_cost': 1,
+        'in_the_wild_cost': 1,
+        'in_a_house_cost': 1,
+        'apples_growth': (3, 10)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
+    },
+    'winter': {
+        'move_cost': 2,
+        'in_the_wild_cost': 10,
+        'in_a_house_cost': 1,
+        'apples_growth': (1, 4)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
+    },
+    'reward_function': DEFAULT_REWARD_FUNCTION
+}
+
+MINI_SETUP_SINGLE_PLAYER = {
+    'grid_size_x': 5,
+    'grid_size_y': 5,
+    'number_of_players': 1,
     'number_of_houses': 3,
     'number_of_trees': 3,
     'initial_player_apples': 20,
@@ -54,3 +80,4 @@ MINI_SETUP = {
     },
     'reward_function': DEFAULT_REWARD_FUNCTION
 }
+
