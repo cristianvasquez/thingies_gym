@@ -1,5 +1,3 @@
-
-
 import matplotlib.pyplot as plt
 from numpy import np
 
@@ -12,8 +10,8 @@ def drawValueFunction(V, gridWorld, policy):
         i = cell.getIndex()
         if not cell.isGoal():
             text = ax.text(p[1], p[0], str(policy[i]),
-                       ha="center", va="center", color="w")
+                           ha="center", va="center", color="w")
         if cell.isGoal():
             text = ax.text(p[1], p[0], "X",
-                       ha="center", va="center", color="w")
+                           ha="center", va="center", color="w")
     plt.show()
