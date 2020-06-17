@@ -3,7 +3,11 @@ from pynput.keyboard import Key, Listener, KeyCode
 
 from setup import MINI_SETUP
 
-game = Winter_is_coming(setup=MINI_SETUP)
+setup = MINI_SETUP
+# setup['actions_per_turn'] = 1
+# setup['number_of_players'] = 2
+
+game = Winter_is_coming(setup=setup)
 
 key_map = {
     KeyCode(char='w'): Action.MOVE_UP,
@@ -17,7 +21,6 @@ key_map = {
 
 print("The game starts, exit with ESC", key_map)
 game.render()
-
 
 # State, Reward, Is_terminal, Any
 
