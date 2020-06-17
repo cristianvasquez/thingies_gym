@@ -2,12 +2,13 @@ from typing import Any, Tuple
 
 from gym.utils import seeding
 from enum import Enum, unique
-
+from collections import deque
 from render import Winter_is_coming_renderer
 from setup import DEFAULT_SETUP
 
 MAX_APPLES_PER_TREE = 100
 MAX_APPLES_PER_PLAYER = 10000
+MAX_TURNS = 1000
 
 
 @unique
@@ -63,39 +64,44 @@ class Winter_is_coming():
         self._grid_size_x = setup['grid_size_x']
         self._grid_size_y = setup['grid_size_y']
         self._actions_per_turn = setup['actions_per_turn']
-        self._turns_between_seasons = setup['turns_between_seasons']
         self._apple_gathering_capacity = setup['apple_gathering_capacity']
         self._summer_spec = tuple(setup['summer'].values())
         self._winter_spec = tuple(setup['winter'].values())
 
-        self.players, self.houses, self.trees, self.current_season = self._build_state(current_season=Seasons.SUMMER)
+        self.current_turn = 0
+        self.players, self.houses, self.trees = self._get_random_positions()
+        self.current_season = Seasons.SUMMER
+        self.turns_until_season_change = setup['turns_between_seasons']
 
         self._renderer = Winter_is_coming_renderer(len(self.players))
-        self.current_turn = 0
-        self.is_terminal = False
         self.playing_queue = self._draw_new_playing_queue()
 
     def random_state(self):
-        return self._build_state(
+
+        current_season = list(Seasons)[self.np_random.randint(len(list(Seasons)))]  # random season
+        turns_until_season_change = self.np_random.randint(1, self.setup[
+            'turns_between_seasons'] + 1)  # random turns_until_season_change
+        current_player = self.np_random.randint(0, self.setup['number_of_players'])
+
+        players, houses, trees = self._get_random_positions(
             tree_apples_bounds=(0, MAX_APPLES_PER_TREE),
             player_apples_bound=(0, MAX_APPLES_PER_PLAYER)
         )
+        return current_player, (players, houses, trees, current_season, turns_until_season_change)
 
-    def _build_state(self, tree_apples_bounds=None, player_apples_bound=None, current_season=None):
+    def _get_random_positions(self, tree_apples_bounds=None, player_apples_bound=None):
         if player_apples_bound is None:
             player_apples_bound = (self.setup['initial_player_apples'], self.setup['initial_player_apples'] + 1)
         if tree_apples_bounds is None:
             tree_apples_bounds = (self.setup['initial_apples_per_tree'], self.setup['initial_apples_per_tree'] + 1)
-        if current_season is None:
-            current_season = list(Seasons)[self.np_random.randint(len(list(Seasons)))]  # random season
 
-        spots = [(x, y) for x in list(range(self._grid_size_x)) for y in list(range(self._grid_size_y))]
+        all_spots = [(x, y) for x in list(range(self._grid_size_x)) for y in list(range(self._grid_size_y))]
 
         # Allocate players
-        player_positions = self.np_random.choice(len(spots), self.setup['number_of_players'], replace=False)
+        player_positions = self.np_random.choice(len(all_spots), self.setup['number_of_players'], replace=False)
 
         # coordinates, apples, actions_left, active
-        players = [(spots[i],
+        players = [(all_spots[i],
                     self.np_random.randint(player_apples_bound[0], player_apples_bound[1]),
                     self._actions_per_turn, True)
                    for i in player_positions]
@@ -104,35 +110,30 @@ class Winter_is_coming():
         assert number_of_houses_and_trees < self._grid_size_x * self._grid_size_y, "Not enough space for so many houses  and trees"
 
         # Allocate houses and trees
-        houses_and_trees_positions = self.np_random.choice(len(spots), number_of_houses_and_trees, replace=False)
+        houses_and_trees_positions = self.np_random.choice(len(all_spots), number_of_houses_and_trees, replace=False)
 
-        # houses: (coordinates, type, buy_price, rent_price)
-        houses = [(spots[i], House_type.WILD) for i in houses_and_trees_positions[:self.setup['number_of_houses']]]
+        # houses: (coordinates, type)
+        houses = [(all_spots[i], House_type.WILD) for i in houses_and_trees_positions[:self.setup['number_of_houses']]]
         # trees: (coordinates, number_of_initial_apples)
-        trees = [(spots[i],
+        trees = [(all_spots[i],
                   self.np_random.randint(tree_apples_bounds[0], tree_apples_bounds[1]))
                  for i in houses_and_trees_positions[self.setup['number_of_houses']:]]
 
-        list(map(lambda x: x.value, list(Action)))
+        return players, houses, trees
 
-        #
-        # self.houses = [
-        #     (spots[i], None, self.np_random.randint(House_spec.BUY_PRICE_LB.value, House_spec.BUY_PRICE_UB.value + 1),
-        #      self.np_random.randint(House_spec.RENT_PRICE_LB.value, House_spec.RENT_PRICE_UB.value + 1)) for i in
-        #     houses_positions]
-
-        return players, houses, trees, current_season
+    def state(self) -> types.State:
+        return self.players, self.houses, self.trees, self.current_season, self.turns_until_season_change
 
     @property
     def action_space(self):
         return list(map(lambda x: x.value, list(Action)))
 
-    def state(self) -> types.State:
-        return self.players, self.houses, self.trees, self.current_season
-
     def render(self):
-        print(self._renderer.render(self._grid_size_x, self._grid_size_y, current_turn=self.current_turn,
-                                    playing_queue=self.playing_queue, state=self.state(), is_terminal=self.is_terminal))
+        print(self._renderer.render(self._grid_size_x, self._grid_size_y,
+                                    current_turn=self.current_turn,
+                                    playing_queue=self.playing_queue, state=self.state(),
+                                    is_terminal=self._is_terminal,
+                                    current_player_id=self.current_player_id))
 
     def _season_specs(self):
         return self._summer_spec if self.current_season == Seasons.SUMMER else self._winter_spec
@@ -142,10 +143,10 @@ class Winter_is_coming():
 
     def step(self, action: Action) -> types.Response:
 
-        if self.is_terminal:
+        if self._is_terminal:
             raise RuntimeError("Terminal state reached")
 
-        current_player_id = self.playing_queue[0]
+        current_player_id = self.current_player_id
         (x, y), apples, actions_left, active = self.players[current_player_id]
         move_cost, in_the_wild_cost, in_a_house_cost, _ = self._season_specs()
 
@@ -188,9 +189,11 @@ class Winter_is_coming():
         apples = min(apples, MAX_APPLES_PER_PLAYER)
 
         # if player has 0 apples, ... dies
+        player_died = False
         if apples == 0:
             active = False
             actions_left = 0
+            player_died = True
 
         # update the player
         updated_player = ((x, y), apples, actions_left, active)
@@ -198,14 +201,18 @@ class Winter_is_coming():
 
         reward = self.setup['reward_function'](updated_player)
 
-        self.is_terminal = self._next_turn()
-        return self.state(), reward, self.is_terminal, None
+        self._next_turn()
+        return self.state(), reward, self._is_terminal, (player_died,)
+
+    @property
+    def current_player_id(self):
+        return self.playing_queue[0] if len(self.playing_queue) > 0 else None
 
     @property
     def player_ids(self):
         return list(range(len(self.players)))
 
-    def _players_with_actions_left(self, player_ids):
+    def _active_with_actions(self, player_ids):
         available = []
         for i in player_ids:
             (_, _, actions_left, active) = self.players[i]
@@ -214,32 +221,34 @@ class Winter_is_coming():
         return available
 
     def _draw_new_playing_queue(self):
-        alive_players_ids = []
-        for i, (coord, apples, _, active) in enumerate(self.players):
-            if active:
-                self.players[i] = (coord, apples, self._actions_per_turn, active)  # Update actions per turn
-                alive_players_ids.append(i)
+        alive_players_ids = self._active_with_actions(self.player_ids)
         return self.np_random.choice(alive_players_ids, len(alive_players_ids), replace=False) if len(
-            alive_players_ids) > 0 else None
+            alive_players_ids) > 0 else []
 
-    def _next_turn(self) -> types.Is_terminal:
+    @property
+    def _is_terminal(self):
+        return self.current_player_id is None or self.current_turn > MAX_TURNS
 
-        # filter players without actions left
-        self.playing_queue = self._players_with_actions_left(self.playing_queue)
+    def _next_turn(self):
+
+        # filter players that died, or don't have actions left
+        self.playing_queue = self._active_with_actions(self.playing_queue)
 
         if len(self.playing_queue) == 0:
+            # A new turn starts, update actions left
+            for i, (coord, apples, _, active) in enumerate(self.players):
+                if active:
+                    self.players[i] = (coord, apples, self._actions_per_turn, active)  # Update actions
 
             # Draw another player queue
             self.playing_queue = self._draw_new_playing_queue()
-
-            # all players died, this is a terminal state
-            if self.playing_queue is None:
-                return True
-
             self.current_turn += 1
 
             # Season changes
-            if self.current_turn % self._turns_between_seasons:
+            self.turns_until_season_change -= 1
+            if self.turns_until_season_change == 0:
+
+                self.turns_until_season_change = self.setup['turns_between_seasons']
                 self.current_season = self._next_season()
                 # Apply tree growth
                 _, _, _, (apples_growth_lb, apples_growth_up) = self._season_specs()
@@ -249,4 +258,3 @@ class Winter_is_coming():
                     _apples = min(_apples, MAX_APPLES_PER_TREE)
                     # Update apples
                     self.trees[i] = ((_x, _y), _apples)
-        return False
