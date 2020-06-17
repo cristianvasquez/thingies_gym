@@ -35,10 +35,10 @@ MINI_SETUP = {
     'number_of_players': 2,
     'number_of_houses': 3,
     'number_of_trees': 3,
-    'initial_player_apples': 10,
+    'initial_player_apples': 20,
     'apple_gathering_capacity': 5,
     'initial_apples_per_tree': 10,
-    'actions_per_turn': 2,
+    'actions_per_turn': 5,
     'turns_between_seasons': 2,
     'summer': {
         'move_cost': 1,

@@ -15,6 +15,8 @@ class Winter_is_coming_renderer:
         headers = [x for x in list(range(grid_size_x))]
         table = []
 
+        current_player_id =  None if playing_queue is None else playing_queue[0]
+
         def render_coord(x, y):
 
             # Render Players
@@ -22,20 +24,19 @@ class Winter_is_coming_renderer:
             for i, ((_x, _y), apples, actions_left, active) in enumerate(players):
                 if x == _x and y == _y:
                     if not active:
-                        spot += f'thingy[{i}]RIP\n'
+                        spot += f'thingy_{i} RIP\n'
                     else:
-                        spot += f'-->THINGY[{i}]({apples})<--\n' if i == playing_queue[
-                            0] else f'thingy[{i}]({apples})\n'
+                        spot += f'-->THINGY_{i}<-- ({apples})\n' if i == current_player_id else f'thingy_{i} ({apples})\n'
 
             # Render Houses
             for i, ((_x, _y), type) in enumerate(houses):
                 if x == _x and y == _y:
-                    spot += '{}[{}]\n'.format('House', i)
+                    spot += '{}_{}\n'.format('House', i)
 
             # Render Trees
             for i, ((_x, _y), apples_left) in enumerate(trees):
                 if x == _x and y == _y:
-                    spot += '{}[{}]({})\n'.format('Tree', i, apples_left)
+                    spot += '{}_{} ({})\n'.format('Tree', i, apples_left)
 
             return spot
 
@@ -47,7 +48,6 @@ class Winter_is_coming_renderer:
         status = f'current_turn:{current_turn}, season:{season}, playing_queue:{playing_queue}'
 
         if not is_terminal:
-            current_player_id = playing_queue[0]
             ((_x, _y), apples, actions_left, active_player) = players[current_player_id]
             status += f'\ncurrent_player[{current_player_id}], coords: ({_x},{_y}), apples:({apples}), Actions left: {actions_left} '
         else:

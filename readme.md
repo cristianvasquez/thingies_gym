@@ -8,7 +8,7 @@ This grid world is full of thingies that love apples.
 * Thingies spend apples to move around.
 * From time to time, trees with apples appear in the grid
 * Thingies can collect apples from the trees
-* A thingy that doesn't have any apple left dies
+* A thingy dies if it has 0 apples
 * Thingies can perform a fixed number of actions each turn. 
 * The order in which thingies play is randomly chosen.
 
