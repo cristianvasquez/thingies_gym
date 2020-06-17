@@ -15,6 +15,8 @@ class Winter_is_coming_renderer:
         headers = [x for x in list(range(grid_size_x))]
         table = []
 
+        current_player_id =  None if playing_queue is None else playing_queue[0]
+
         def render_coord(x, y):
 
             # Render Players
