@@ -1,9 +1,9 @@
 from rules import Winter_is_coming, Action
 from pynput.keyboard import Key, Listener, KeyCode
 
-from setup import MINI_SETUP
+from setup import MINI_SETUP_TWO_PLAYERS
 
-setup = MINI_SETUP
+setup = MINI_SETUP_TWO_PLAYERS
 # setup['actions_per_turn'] = 1
 # setup['number_of_players'] = 2
 

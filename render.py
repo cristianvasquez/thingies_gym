@@ -1,7 +1,7 @@
 from gym.utils import colorize
 from tabulate import tabulate
 
-from util.random_emoji import random_emoji
+from lib.random_emoji import random_emoji
 
 
 class Winter_is_coming_renderer:
@@ -9,13 +9,11 @@ class Winter_is_coming_renderer:
         # Select player emoticons and names
         self.token_emojis = [random_emoji() for i in range(number_of_players)]
 
-    def render(self, grid_size_x, grid_size_y, current_turn=None, playing_queue=None, state=None, is_terminal=False):
-        players, houses, trees, season = state
+    def render(self, grid_size_x, grid_size_y, current_turn=None, playing_queue=None, state=None, is_terminal=False, current_player_id=None):
+        players, houses, trees, season, turns_until_season_change = state
         # build the grid and show it
         headers = [x for x in list(range(grid_size_x))]
         table = []
-
-        current_player_id =  None if playing_queue is None else playing_queue[0]
 
         def render_coord(x, y):
 
@@ -45,7 +43,7 @@ class Winter_is_coming_renderer:
 
 
         # coordinates, credits, actions_left, active_player = current_player
-        status = f'current_turn:{current_turn}, season:{season}, playing_queue:{playing_queue}'
+        status = f'current_turn:{current_turn}, season:{season}, turns_until_season_change:{turns_until_season_change}, playing_queue:{playing_queue}'
 
         if not is_terminal:
             ((_x, _y), apples, actions_left, active_player) = players[current_player_id]
