@@ -19,7 +19,7 @@ key_map = {
 }
 
 print("The game starts, exit with ESC", key_map)
-game.render()
+print(game.render())
 
 # State, Reward, Is_terminal, Any
 
@@ -34,12 +34,12 @@ class Controller():
 
     def on_release(self,key):
         if self.is_terminal:
-            game.render()
+            print(game.render())
             return False
         if key == Key.esc:
             return False
         if (key in key_map):
-            game.render()
+            print(game.render())
 
 controller = Controller()
 

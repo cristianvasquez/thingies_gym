@@ -1,4 +1,4 @@
-from distribution import dist
+from environment import dist
 from rules import Winter_is_coming, Action
 from setup import MINI_SETUP_TWO_PLAYERS
 from variants import Summer, Winter

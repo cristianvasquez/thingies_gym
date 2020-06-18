@@ -33,10 +33,10 @@ class Winter_is_coming():
             setup = DEFAULT_SETUP
         self.np_random, seed = seeding.np_random(seed)
         self.setup = setup
+        self._renderer = Winter_is_coming_renderer()
 
         self._actions_per_turn = setup['actions_per_turn']
         self._apple_gathering_capacity = setup['apple_gathering_capacity']
-
         turns_between_seasons = setup['turns_between_seasons']
         self._variants = []
         if 'summer' in setup:
@@ -44,9 +44,15 @@ class Winter_is_coming():
         if 'winter' in setup:
             self._variants.append(Winter(turns_between_seasons, values=setup['winter'], seed=seed))
 
+        self.reset()
+
+    def reset(self):
+        '''
+        Generates an initial state
+        :return:
+        '''
         self.current_turn = 0
         self.players, self.grid = self._generate_objects()
-        self._renderer = Winter_is_coming_renderer(len(self.players))
         self.playing_queue = self._draw_new_playing_queue()
 
     def random_state(self):
@@ -139,13 +145,13 @@ class Winter_is_coming():
         return list(map(lambda x: x.value, list(Action)))
 
     def render(self):
-        print(self._renderer.render(
+        return self._renderer.render(
             state=self.state(),
             current_turn=self.current_turn,
             current_player_id=self.current_player,
             playing_queue=self.playing_queue,
             is_terminal=self.terminal,
-        ))
+        )
 
     def do_action(self, action: int) -> types.Response:
 

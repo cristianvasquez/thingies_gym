@@ -5,9 +5,10 @@ from lib.random_emoji import random_emoji
 
 
 class Winter_is_coming_renderer:
-    def __init__(self, number_of_players):
+    def __init__(self):
         # Select player emoticons and names
-        self.token_emojis = [random_emoji() for i in range(number_of_players)]
+        # self.token_emojis = [random_emoji() for i in range(number_of_players)]
+        pass
 
     def render(self, state=None, current_turn=None, current_player_id=None, playing_queue=None, is_terminal=False,
                ):
