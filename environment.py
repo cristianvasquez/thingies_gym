@@ -176,7 +176,7 @@ def dist(coord_1, coord_2):
 
 
 if __name__ == "__main__":
-    thingy = Thingy(setup = MINI_SETUP_TWO_PLAYERS,feature_selection=Feature_selection.WRT_PLAYER_NORM)
+    thingy = Thingy(setup=MINI_SETUP_TWO_PLAYERS, feature_selection=Feature_selection.WRT_PLAYER_NORM)
     print(thingy.observation_space)
     print(thingy.action_space)
 
