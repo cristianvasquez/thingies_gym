@@ -2,8 +2,7 @@ from enum import Enum, unique
 
 MAX_APPLES_PER_SPOT = 100
 MAX_APPLES_PER_PLAYER = 10000
-MAX_TURNS = 1000
-
+MAX_TURNS = 150
 
 @unique
 class Action(Enum):
@@ -83,8 +82,8 @@ MINI_SETUP_TWO_PLAYERS = {
 This mini setup does not have the summer/winter variants
 '''
 MINI_SETUP_SINGLE_PLAYER = {
-    'grid_size_x': 5,
-    'grid_size_y': 5,
+    'grid_size_x': 4,
+    'grid_size_y': 4,
     'number_of_players': 1,
     'number_of_houses': 3,
     'number_of_trees': 3,
@@ -94,5 +93,6 @@ MINI_SETUP_SINGLE_PLAYER = {
     'actions_per_turn': 5,
     'turns_between_seasons': 2,
     'move_cost': 1,
+    'death_zone': True,
     'reward_function': DEFAULT_REWARD_FUNCTION
 }

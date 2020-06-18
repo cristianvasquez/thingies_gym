@@ -23,7 +23,6 @@ class Feature_selection(Enum):
     WRT_PLAYER = 2
     WRT_PLAYER_NORM = 3
 
-
 class Thingy(Env):
     """Custom Environment that follows gym interface"""
     metadata = {'render.modes': ['human']}

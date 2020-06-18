@@ -35,6 +35,10 @@ class Winter_is_coming():
         self.setup = setup
         self._renderer = Winter_is_coming_renderer()
 
+        # The player dies if go out of the screen
+        if 'death_zone' in setup:
+            self.death_zone = setup['death_zone']
+
         self._actions_per_turn = setup['actions_per_turn']
         self._apple_gathering_capacity = setup['apple_gathering_capacity']
         turns_between_seasons = setup['turns_between_seasons']
@@ -164,18 +168,38 @@ class Winter_is_coming():
         (x, y), apples, actions_left, active = self.players[current_player_id]
         move_cost = self.setup['move_cost']
 
-        if action == Action.MOVE_LEFT.value and x > 0:
-            x = x - 1 if x > 0 else x
-            apples -= move_cost
+        if action == Action.MOVE_LEFT.value:
+            if self.death_zone and x == 0:
+                # falls off the cliff and dies
+                active = False
+                actions_left = 0
+            else:
+                x = x - 1 if x > 0 else x
+                apples -= move_cost
         elif action == Action.MOVE_RIGHT.value:
-            x = x + 1 if x < _grid_size_x - 1 else x
-            apples -= move_cost
+            if self.death_zone and x == _grid_size_x - 1:
+                # falls off the cliff and dies
+                active = False
+                actions_left = 0
+            else:
+                x = x + 1 if x < _grid_size_x - 1 else x
+                apples -= move_cost
         elif action == Action.MOVE_UP.value:
-            y = y - 1 if y > 0 else y
-            apples -= move_cost
+            if self.death_zone and y == 0:
+                # falls off the cliff and dies
+                active = False
+                actions_left = 0
+            else:
+                y = y - 1 if y > 0 else y
+                apples -= move_cost
         elif action == Action.MOVE_DOWN.value:
-            y = y + 1 if y < _grid_size_y - 1 else y
-            apples -= move_cost
+            if self.death_zone and y == _grid_size_y - 1:
+                # falls off the cliff and dies
+                active = False
+                actions_left = 0
+            else:
+                y = y + 1 if y < _grid_size_y - 1 else y
+                apples -= move_cost
         elif action == Action.COLLECT_APPLES.value:
             _apples = self.grid[x, y, 1]
             if _apples > 0:
@@ -201,11 +225,9 @@ class Winter_is_coming():
         apples = min(apples, MAX_APPLES_PER_PLAYER)
 
         # if player has 0 apples, ... dies
-        player_died = False
         if apples == 0:
             active = False
             actions_left = 0
-            player_died = True
 
         # update the player
         updated_player = ((x, y), apples, actions_left, active)
@@ -214,7 +236,7 @@ class Winter_is_coming():
         reward = self.setup['reward_function'](updated_player)
 
         self._next_turn()
-        return self.state(), reward, self.terminal, (player_died)
+        return self.state(), reward, self.terminal, (active)
 
     @property
     def current_player(self) -> id:

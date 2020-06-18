@@ -18,7 +18,7 @@ LR_CRITIC = 3e-4  # learning rate of the critic
 WEIGHT_DECAY = 0.0001  # L2 weight decay
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+# device = "cpu"
 
 class Agent():
     """Interacts with and learns from the environment."""
