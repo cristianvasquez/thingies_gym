@@ -91,7 +91,7 @@ class Thingy(Env):
         return self.state()
 
     def render(self, mode='human', close=False):
-        print(self.render())
+        print(self.game.render())
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
