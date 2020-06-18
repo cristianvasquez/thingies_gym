@@ -9,13 +9,16 @@ class Winter_is_coming_renderer:
         # Select player emoticons and names
         self.token_emojis = [random_emoji() for i in range(number_of_players)]
 
-    def render(self, grid_size_x, grid_size_y, current_turn=None, playing_queue=None, state=None, is_terminal=False, current_player_id=None):
-        players, houses, trees, season, turns_until_season_change = state
-        # build the grid and show it
-        headers = [x for x in list(range(grid_size_x))]
-        table = []
+    def render(self, state=None, current_turn=None, current_player_id=None, playing_queue=None, is_terminal=False,
+               ):
+        grid, players, variant_state_info = state
 
-        current_player_id =  None if playing_queue is None else playing_queue[0]
+
+        # build the grid and show it
+        _grid_size_x, _grid_size_y, _ = grid.shape
+
+        headers = [x for x in list(range(_grid_size_x))]
+        table = []
 
         def render_coord(x, y):
 
@@ -28,24 +31,28 @@ class Winter_is_coming_renderer:
                     else:
                         spot += f'-->THINGY_{i}<-- ({apples})\n' if i == current_player_id else f'thingy_{i} ({apples})\n'
 
-            # Render Houses
-            for i, ((_x, _y), type) in enumerate(houses):
-                if x == _x and y == _y:
-                    spot += '{}_{}\n'.format('House', i)
+            location_type = grid[x, y][0]
+            apples = grid[x, y][1]
 
-            # Render Trees
-            for i, ((_x, _y), apples_left) in enumerate(trees):
-                if x == _x and y == _y:
-                    spot += '{}_{} ({})\n'.format('Tree', i, apples_left)
+            l = {
+                0: '',
+                1: 'Tree',
+                2: 'House',
+                3: 'O_House',
+                4: 'F_House'
+            }
+            if apples > 0:
+                spot += f'{l[location_type]}({apples})\n'
+            else:
+                spot += f'{l[location_type]}\n'
 
             return spot
 
-        for y in list(range(grid_size_y)):
-            table.append([render_coord(x, y) for x in list(range(grid_size_x))])
-
+        for y in list(range(_grid_size_y)):
+            table.append([render_coord(x, y) for x in list(range(_grid_size_x))])
 
         # coordinates, credits, actions_left, active_player = current_player
-        status = f'current_turn:{current_turn}, season:{season}, turns_until_season_change:{turns_until_season_change}, playing_queue:{playing_queue}'
+        status = f'current_turn:{current_turn}, variant_state_info:{variant_state_info}, playing_queue:{playing_queue}'
 
         if not is_terminal:
             ((_x, _y), apples, actions_left, active_player) = players[current_player_id]

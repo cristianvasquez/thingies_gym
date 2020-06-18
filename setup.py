@@ -1,3 +1,29 @@
+from enum import Enum, unique
+
+MAX_APPLES_PER_SPOT = 100
+MAX_APPLES_PER_PLAYER = 10000
+MAX_TURNS = 1000
+
+
+@unique
+class Action(Enum):
+    MOVE_UP = 0
+    MOVE_DOWN = 1
+    MOVE_LEFT = 2
+    MOVE_RIGHT = 3
+    COLLECT_APPLES = 4
+    DO_NOTHING = 5
+
+
+@unique
+class Location_type(Enum):
+    EMPTY_WILDERNESS = 0
+    TREE = 1
+    UNCLAIMED_HOUSE = 2
+    OWNED_HOUSE = 3
+    FRACTIONAL_OWNERSHIP_HOUSE = 4
+
+
 def DEFAULT_REWARD_FUNCTION(player):
     (_x, _y), apples, actions_left, active = player
     return 1 if active else -1000  # Reward the player if still alive, and punish him when he dies (again)
@@ -14,14 +40,13 @@ DEFAULT_SETUP = {
     'apple_gathering_capacity': 5,
     'actions_per_turn': 5,
     'turns_between_seasons': 5,
+    'move_cost': 1,
     'summer': {
-        'move_cost': 1,
         'in_the_wild_cost': 2,
         'in_a_house_cost': 0,
         'apples_growth': (3, 10)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
     },
     'winter': {
-        'move_cost': 2,
         'in_the_wild_cost': 10,
         'in_a_house_cost': 0,
         'apples_growth': (1, 4)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
@@ -40,14 +65,13 @@ MINI_SETUP_TWO_PLAYERS = {
     'initial_apples_per_tree': 10,
     'actions_per_turn': 1,
     'turns_between_seasons': 3,
+    'move_cost': 1,
     'summer': {
-        'move_cost': 1,
         'in_the_wild_cost': 1,
         'in_a_house_cost': 1,
         'apples_growth': (3, 10)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
     },
     'winter': {
-        'move_cost': 2,
         'in_the_wild_cost': 10,
         'in_a_house_cost': 1,
         'apples_growth': (1, 4)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
@@ -55,6 +79,9 @@ MINI_SETUP_TWO_PLAYERS = {
     'reward_function': DEFAULT_REWARD_FUNCTION
 }
 
+'''
+This mini setup does not have the summer/winter variants
+'''
 MINI_SETUP_SINGLE_PLAYER = {
     'grid_size_x': 5,
     'grid_size_y': 5,
@@ -66,18 +93,6 @@ MINI_SETUP_SINGLE_PLAYER = {
     'initial_apples_per_tree': 10,
     'actions_per_turn': 5,
     'turns_between_seasons': 2,
-    'summer': {
-        'move_cost': 1,
-        'in_the_wild_cost': 1,
-        'in_a_house_cost': 1,
-        'apples_growth': (3, 10)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
-    },
-    'winter': {
-        'move_cost': 2,
-        'in_the_wild_cost': 10,
-        'in_a_house_cost': 1,
-        'apples_growth': (1, 4)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
-    },
+    'move_cost': 1,
     'reward_function': DEFAULT_REWARD_FUNCTION
 }
-
