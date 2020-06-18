@@ -32,6 +32,7 @@ class Thingy(Env):
         super(Thingy, self).__init__()  # Define action and observation space
         self.config = setup
         self.game = Winter_is_coming(setup=setup, seed=seed)
+        self._actor_player = self.game.current_player
 
         self.feature_selection = feature_selection
         """
@@ -73,15 +74,17 @@ class Thingy(Env):
         elif self.feature_selection == Feature_selection.DEFAULT_NORM:
             return self.features(state, True)
         elif self.feature_selection == Feature_selection.WRT_PLAYER:
-            return self.features_wrt_player(self.game.current_player, state, False)
+            return self.features_wrt_player(self._actor_player, state, False)
         elif self.feature_selection == Feature_selection.WRT_PLAYER_NORM:
-            return self.features_wrt_player(self.game.current_player, state, True)
+            return self.features_wrt_player(self._actor_player, state, True)
         return state
 
     def step(self, action: int):
         state, reward, terminal, (player_died) = self.game.do_action(action)
+        result = self.fs(state), reward, terminal, (player_died)
+        self._actor_player = self.game.current_player
         # Execute one time step within the environment
-        return self.fs(state), reward, terminal, (player_died)
+        return result
 
     def state(self):
         return self.fs(self.game.state())
