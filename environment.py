@@ -91,6 +91,7 @@ class Thingy(Env):
 
     def reset(self):
         self.game.reset()
+        self._actor_player = self.game.current_player
         return self.state()
 
     def render(self, mode='human', close=False):
