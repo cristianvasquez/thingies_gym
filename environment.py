@@ -29,7 +29,7 @@ class Thingy(Env):
     metadata = {'render.modes': ['human']}
 
     def __init__(self, setup=DEFAULT_SETUP, feature_selection=Feature_selection.DEFAULT, seed=None):
-        super(Thingy, self).__init__()  # Define action and observation space
+        super(type(Thingy), self).__init__()  # Define action and observation space
         self.config = setup
         self.game = Winter_is_coming(setup=setup, seed=seed)
 
@@ -176,7 +176,7 @@ def dist(coord_1, coord_2):
 
 
 if __name__ == "__main__":
-    thingy = Thingy(setup = MINI_SETUP_TWO_PLAYERS,feature_selection=Feature_selection.WRT_PLAYER_NORM)
+    thingy = Thingy(setup=MINI_SETUP_TWO_PLAYERS, feature_selection=Feature_selection.WRT_PLAYER_NORM)
     print(thingy.observation_space)
     print(thingy.action_space)
 
