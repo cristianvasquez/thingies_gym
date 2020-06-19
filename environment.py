@@ -27,48 +27,23 @@ class Thingy(Env):
     """Custom Environment that follows gym interface"""
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, setup=DEFAULT_SETUP, feature_selection=Feature_selection.DEFAULT, seed=None):
+    def __init__(self, setup=DEFAULT_SETUP, custom_feature=None ,feature_selection=Feature_selection.DEFAULT, seed=None):
         super(Thingy, self).__init__()  # Define action and observation space
+        self.custom_feature=custom_feature
         self.config = setup
         self.game = Winter_is_coming(setup=setup, seed=seed)
         self._actor_player = self.game.current_player
 
         self.feature_selection = feature_selection
-        """
-        A dictionary of simpler spaces.
-
-        Example usage:
-        self.observation_space = spaces.Dict({"position": spaces.Discrete(2), "velocity": spaces.Discrete(3)})
-
-        Example usage [nested]:
-        self.nested_observation_space = spaces.Dict({
-            'sensors':  spaces.Dict({
-                'position': spaces.Box(low=-100, high=100, shape=(3,)),
-                'velocity': spaces.Box(low=-1, high=1, shape=(3,)),
-                'front_cam': spaces.Tuple((
-                    spaces.Box(low=0, high=1, shape=(10, 10, 3)),
-                    spaces.Box(low=0, high=1, shape=(10, 10, 3))
-                )),
-                'rear_cam': spaces.Box(low=0, high=1, shape=(10, 10, 3)),
-            }),
-            'ext_controller': spaces.MultiDiscrete((5, 2, 2)),
-            'inner_state':spaces.Dict({
-                'charge': spaces.Discrete(100),
-                'system_checks': spaces.MultiBinary(10),
-                'job_status': spaces.Dict({
-                    'task': spaces.Discrete(5),
-                    'progress': spaces.Box(low=0, high=100, shape=()),
-                })
-            })
-        })
-        """
         # TODO
         self.action_space = len(self.game.action_space)
         self.observation_space = len(self.state())
 
     # TODO implement as the wrapper thing
     def fs(self, state):
-        if self.feature_selection == Feature_selection.DEFAULT:
+        if self.custom_feature is not None:
+            return self.custom_feature(self._actor_player, state)
+        elif self.feature_selection == Feature_selection.DEFAULT:
             return self.features(state, False)
         elif self.feature_selection == Feature_selection.DEFAULT_NORM:
             return self.features(state, True)
