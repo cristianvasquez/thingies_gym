@@ -6,13 +6,12 @@ MAX_TURNS = 150
 
 @unique
 class Action(Enum):
-    MOVE_UP = 0
-    MOVE_DOWN = 1
-    MOVE_LEFT = 2
-    MOVE_RIGHT = 3
-    COLLECT_APPLES = 4
-    DO_NOTHING = 5
-
+    MOVE_LEFT = 0
+    MOVE_RIGHT = 1
+    COLLECT_APPLES = 2
+    DO_NOTHING = 3
+    MOVE_UP = 4
+    MOVE_DOWN = 5
 
 @unique
 class Location_type(Enum):
