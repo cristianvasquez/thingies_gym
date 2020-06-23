@@ -1,20 +1,17 @@
 from typing import Any, Tuple
 import numpy as np
+from acme import specs
 
 from gym.utils import seeding
 from render import Winter_is_coming_renderer
-from setup import DEFAULT_SETUP, MAX_APPLES_PER_SPOT, MAX_APPLES_PER_PLAYER, Location_type, Action, MAX_TURNS
+from setup import DEFAULT_SETUP, MAX_APPLES_PER_SPOT, MAX_APPLES_PER_USER, Location_type, Action, MAX_TURNS
 from variants import Winter, Summer
+import dm_env
+
+D_TYPE = np.float32
 
 
-class types():
-    State = Any
-    Reward = float
-    Is_terminal = bool
-    Response = Tuple[State, Reward, Is_terminal, Any]
-
-
-class Winter_is_coming():
+class Winter_is_coming(dm_env.Environment):
     '''
     ## Base rules
 
@@ -38,6 +35,11 @@ class Winter_is_coming():
         # The player dies if go out of the screen
         if 'death_zone' in setup:
             self.death_zone = setup['death_zone']
+        else:
+            self.death_zone = False
+
+        self._total_regret = 0.
+        self.bsuite_num_episodes = 100
 
         self._actions_per_turn = setup['actions_per_turn']
         self._apple_gathering_capacity = setup['apple_gathering_capacity']
@@ -50,116 +52,17 @@ class Winter_is_coming():
 
         self.reset()
 
-    def reset(self):
-        '''
-        Generates an initial state
-        :return:
-        '''
+    def reset(self) -> dm_env.TimeStep:
+        """Returns the first `TimeStep` of a new episode."""
         self.current_turn = 0
         self.players, self.grid = self._generate_objects()
         self.playing_queue = self._draw_new_playing_queue()
+        return dm_env.restart(self._observation())
 
-    def random_state(self):
-        '''
-        A random state generator, used for testing purposes
-        :return:
-        '''
-        current_player = self.np_random.randint(0, self.setup['number_of_players'])
-        players, grid = self._generate_objects(
-            tree_apples_bounds=(0, MAX_APPLES_PER_SPOT),
-            player_apples_bound=(0, MAX_APPLES_PER_PLAYER)
-        )
-        current_turn = self.np_random.randint(0, MAX_TURNS)
-        return current_player, (grid, players, self.get_variant_state_info(current_turn))
+    def step(self, action: int) -> dm_env.TimeStep:
+        """Updates the environment according to the action."""
 
-    def _generate_objects(self, tree_apples_bounds=None, player_apples_bound=None):
-        '''
-        Generates a list of players and a grid with the objects of the game
-        :param tree_apples_bounds:
-        :param player_apples_bound:
-        :return:
-        '''
-        _grid_size_x = self.setup['grid_size_x']
-        _grid_size_y = self.setup['grid_size_y']
-        _grid = np.zeros((_grid_size_x, _grid_size_y, 2))
-
-        all_spots = [(x, y) for x in list(range(_grid_size_x)) for y in list(range(_grid_size_y))]
-
-        # Get random positions for players
-        player_positions = self.np_random.choice(len(all_spots), self.setup['number_of_players'], replace=False)
-
-        # The number of initial apples for each player can be random or not
-        if player_apples_bound is None:
-            player_apples_bound = (self.setup['initial_player_apples'], self.setup['initial_player_apples'] + 1)
-
-        # coordinates, apples, actions_left, active
-        players = [(all_spots[i],
-                    self.np_random.randint(player_apples_bound[0], player_apples_bound[1]),
-                    self._actions_per_turn, True)
-                   for i in player_positions]
-
-        number_of_houses_and_trees = self.setup['number_of_houses'] + self.setup['number_of_trees']
-        assert number_of_houses_and_trees < _grid_size_x * _grid_size_y, "Not enough space for so many houses  and trees"
-
-        # House allocation
-        # Get random positions for houses and trees
-        houses_and_trees_positions = self.np_random.choice(len(all_spots), number_of_houses_and_trees, replace=False)
-        # Set houses in the grid
-        for i in houses_and_trees_positions[:self.setup['number_of_houses']]:
-            _x, _y = all_spots[i]
-            _grid[_x, _y, :] = [Location_type.UNCLAIMED_HOUSE.value, 0]
-
-        # Tree allocation
-        # The number of initial apples in a tree can be random or not
-        if tree_apples_bounds is None:
-            tree_apples_bounds = (self.setup['initial_apples_per_tree'], self.setup['initial_apples_per_tree'] + 1)
-        # Set trees in the grid
-        for i in houses_and_trees_positions[self.setup['number_of_houses']:]:
-            _x, _y = all_spots[i]
-            _apples = self.np_random.randint(tree_apples_bounds[0], tree_apples_bounds[1])
-            _grid[_x, _y, :] = [Location_type.TREE.value, _apples]
-
-        return players, _grid
-
-    def get_variant_state_info(self, current_turn):
-        '''
-        gets the state of all the variants applied to the game
-        :param current_turn:
-        :return:
-        '''
-        result = []
-        for variant in self._variants:
-            if variant.applies(current_turn):
-                result.append(variant.state_info(current_turn))
-        return result
-
-    def state(self) -> types.State:
-        '''
-        Gets the current state
-        :return:
-        '''
-        return self.grid, self.players, self.get_variant_state_info(self.current_turn)
-
-    @property
-    def action_space(self) -> [int]:
-        '''
-        Gets a list of all the possible actions
-        :return:
-        '''
-        return list(map(lambda x: x.value, list(Action)))
-
-    def render(self):
-        return self._renderer.render(
-            state=self.state(),
-            current_turn=self.current_turn,
-            current_player_id=self.current_player,
-            playing_queue=self.playing_queue,
-            is_terminal=self.terminal,
-        )
-
-    def do_action(self, action: int) -> types.Response:
-
-        if self.terminal:
+        if self._terminal:
             raise RuntimeError("Terminal state reached")
 
         _grid_size_x, _grid_size_y, _ = self.grid.shape
@@ -222,7 +125,7 @@ class Winter_is_coming():
 
         # Keep apples in bounds
         apples = max(apples, 0)
-        apples = min(apples, MAX_APPLES_PER_PLAYER)
+        apples = min(apples, MAX_APPLES_PER_USER)
 
         # if player has 0 apples, ... dies
         if apples == 0:
@@ -233,10 +136,139 @@ class Winter_is_coming():
         updated_player = ((x, y), apples, actions_left, active)
         self.players[current_player_id] = updated_player
 
-        reward = self.setup['reward_function'](updated_player)
+        reward = self.setup['reward_function'](updated_player,
+                                               self.grid,
+                                               self.get_variant_state_info(self.current_turn))
 
         self._next_turn()
-        return self.state(), reward, self.terminal, (active)
+
+        if self._terminal:
+            return dm_env.termination(reward=reward, observation=self._observation())
+        else:
+            return dm_env.transition(reward=reward, observation=self._observation())
+        # return self._observation(), reward, self._terminal, (active)
+
+    def observation_spec(self) -> specs.BoundedArray:
+        """Returns the observation spec."""
+        return specs.BoundedArray(shape=self._observation().shape, dtype=self._observation().dtype,
+                                  name="board", minimum=0, maximum=MAX_APPLES_PER_USER)
+
+    def _observation(self) -> np.ndarray:
+
+        bins = np.array([0.1, 5., 10., 15., 20., 25., 30., 35., 40., 45., 50.])
+
+        players = []
+        for _i, ((x, y), apples, actions_left, active) in enumerate(self.players):
+            players.append(x)
+            players.append(y)
+            # players.append(apples)
+            players.append(np.digitize(apples, bins))
+
+            # players.append(actions_left)
+            # players.append(1. if active else 0.)
+
+        np_variant_info = []
+        for variant, value in self.get_variant_state_info(self.current_turn):
+            np_variant_info.append(variant)
+            np_variant_info.append(value)
+
+        result = np.concatenate(
+            (np.array(players), np.digitize(self.grid[:, :, 1], bins).flatten(),
+             np_variant_info
+             ))
+
+        # result = np.concatenate(
+        #     (np.array(players), self.grid.flatten()))
+
+        return np.array(result, copy=False, dtype=np.float32)
+
+    def action_spec(self) -> specs.DiscreteArray:
+        """Returns the action spec."""
+        return specs.DiscreteArray(
+            dtype=np.int, num_values=len(list(Action)), name="action")
+
+    def random_state(self):
+        '''
+        A random state generator, used for testing purposes
+        :return:
+        '''
+        current_player = self.np_random.randint(0, self.setup['number_of_players'])
+        players, grid = self._generate_objects(
+            tree_apples_bounds=(0, MAX_APPLES_PER_SPOT),
+            player_apples_bound=(0, MAX_APPLES_PER_USER)
+        )
+        current_turn = self.np_random.randint(0, MAX_TURNS)
+        return current_player, (grid, players, self.get_variant_state_info(current_turn))
+
+    def _generate_objects(self, tree_apples_bounds=None, player_apples_bound=None):
+        '''
+        Generates a list of players and a grid with the objects of the game
+        :param tree_apples_bounds:
+        :param player_apples_bound:
+        :return:
+        '''
+        _grid_size_x = self.setup['grid_size_x']
+        _grid_size_y = self.setup['grid_size_y']
+        _grid = np.zeros((_grid_size_x, _grid_size_y, 2), dtype=np.float32)
+
+        all_spots = [(x, y) for x in list(range(_grid_size_x)) for y in list(range(_grid_size_y))]
+
+        # Get random positions for players
+        player_positions = self.np_random.choice(len(all_spots), self.setup['number_of_players'], replace=False)
+
+        # The number of initial apples for each player can be random or not
+        if player_apples_bound is None:
+            player_apples_bound = (self.setup['initial_player_apples'], self.setup['initial_player_apples'] + 1)
+
+        # coordinates, apples, actions_left, active
+        players = [(all_spots[i],
+                    self.np_random.randint(player_apples_bound[0], player_apples_bound[1]),
+                    self._actions_per_turn, True)
+                   for i in player_positions]
+
+        number_of_houses_and_trees = self.setup['number_of_houses'] + self.setup['number_of_trees']
+        assert number_of_houses_and_trees < _grid_size_x * _grid_size_y, "Not enough space for so many houses  and trees"
+
+        # House allocation
+        # Get random positions for houses and trees
+        houses_and_trees_positions = self.np_random.choice(len(all_spots), number_of_houses_and_trees, replace=False)
+        # Set houses in the grid
+        for i in houses_and_trees_positions[:self.setup['number_of_houses']]:
+            _x, _y = all_spots[i]
+            _grid[_x, _y, :] = [Location_type.UNCLAIMED_HOUSE.value, 0]
+
+        # Tree allocation
+        # The number of initial apples in a tree can be random or not
+        if tree_apples_bounds is None:
+            tree_apples_bounds = (self.setup['initial_apples_per_tree'], self.setup['initial_apples_per_tree'] + 1)
+        # Set trees in the grid
+        for i in houses_and_trees_positions[self.setup['number_of_houses']:]:
+            _x, _y = all_spots[i]
+            _apples = self.np_random.randint(tree_apples_bounds[0], tree_apples_bounds[1])
+            _grid[_x, _y, :] = [Location_type.TREE.value, _apples]
+
+        return players, _grid
+
+    def get_variant_state_info(self, current_turn):
+        '''
+        gets the state of all the variants applied to the game
+        :param current_turn:
+        :return:
+        '''
+        result = []
+        for variant in self._variants:
+            if variant.applies(current_turn):
+                result.append(variant.state_info(current_turn))
+        return result
+
+    def render(self):
+        return self._renderer.render(
+            state=(self.grid, self.players, self.get_variant_state_info(self.current_turn)),
+            current_turn=self.current_turn,
+            current_player_id=self.current_player,
+            playing_queue=self.playing_queue,
+            is_terminal=self._terminal,
+        )
 
     @property
     def current_player(self) -> id:
@@ -277,7 +309,7 @@ class Winter_is_coming():
             alive_players_ids) > 0 else []
 
     @property
-    def terminal(self) -> bool:
+    def _terminal(self) -> bool:
         '''
         If the game is in a terminal state or not
         :return:
@@ -303,3 +335,6 @@ class Winter_is_coming():
             for variant in self._variants:
                 if variant.applies(self.current_turn):
                     self.grid = variant.update_spots(self.grid)
+
+    def bsuite_info(self):
+        return dict(total_regret=self._total_regret)
