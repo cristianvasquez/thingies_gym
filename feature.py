@@ -1,7 +1,7 @@
 import numpy as np
 from functools import partial
 
-from setup import MAX_APPLES_PER_PLAYER, Location_type, MAX_APPLES_PER_SPOT
+from setup import MAX_APPLES_PER_USER, Location_type, MAX_APPLES_PER_SPOT
 
 
 def n(value, max, normalize):
@@ -17,19 +17,15 @@ def dist(coord_1, coord_2):
 def distribution_variant_info(setup, variant_info, normalize=False):
     turns_between_seasons = setup['turns_between_seasons']
 
-    result = []
-    v = {
-        'Summer': 0,
-        'Winter': 1
-    }
+    variant_info = []
     for variant, value in variant_info:
-        result.append(v[variant])
-        result.append(n(value, turns_between_seasons, normalize))
-    return np.array(result)
+        variant_info.append(variant)
+        variant_info.append(n(value, turns_between_seasons, normalize))
+    return np.array(variant_info, dtype=np.float32)
 
 
 def features_n(setup, current_player_id, state):
-    features(setup, current_player_id, state, normalize=True)
+    return features(setup, current_player_id, state, normalize=True)
 
 
 def features(setup, current_player_id, state, normalize=False):
@@ -42,17 +38,17 @@ def features(setup, current_player_id, state, normalize=False):
     for _i, ((x, y), apples, actions_left, active) in enumerate(_players):
         players.append(n(x, grid_size_x, normalize))
         players.append(n(y, grid_size_y, normalize))
-        players.append(n(apples, MAX_APPLES_PER_PLAYER, normalize))
+        players.append(n(apples, MAX_APPLES_PER_USER, normalize))
         players.append(n(actions_left, actions_per_turn, normalize))
         players.append(1 if active else 0)
 
     np_variant_info = distribution_variant_info(setup, _variant_info, normalize=normalize)
     return np.concatenate(
-        (np.array(players), _grid.flatten(), np_variant_info))
+        (np.array(players, dtype=np.float32), _grid.flatten(), np_variant_info))
 
 
 def features_wrt_player_n(setup, current_player_id, state):
-    features_wrt_player(setup, current_player_id, state, normalize=True)
+    return features_wrt_player(setup, current_player_id, state, normalize=True)
 
 
 def features_wrt_player(setup, current_player_id, state, normalize=False):
@@ -66,7 +62,7 @@ def features_wrt_player(setup, current_player_id, state, normalize=False):
     players = []
     players.append(n(_x, grid_size_x, normalize))
     players.append(n(_y, grid_size_y, normalize))
-    players.append(n(apples_p, MAX_APPLES_PER_PLAYER, normalize))
+    players.append(n(apples_p, MAX_APPLES_PER_USER, normalize))
     players.append(n(actions_left_p, actions_per_turn, normalize))
 
     for _i, (_coords, apples, actions_left, active) in enumerate(_players):
@@ -74,7 +70,7 @@ def features_wrt_player(setup, current_player_id, state, normalize=False):
             (x, y) = dist((_x, _y), _coords)
             players.append(n(x, grid_size_x, normalize))
             players.append(n(y, grid_size_y, normalize))
-            players.append(n(apples, MAX_APPLES_PER_PLAYER, normalize))
+            players.append(n(apples, MAX_APPLES_PER_USER, normalize))
             players.append(n(actions_left, actions_per_turn, normalize))
             players.append(1 if active else 0)
 

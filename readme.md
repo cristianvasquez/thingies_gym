@@ -7,8 +7,8 @@ This grid world is full of thingies that love apples.
 * Thingies can move in the grid in four directions.
 * Thingies spend apples to move around.
 * From time to time, trees with apples appear in the grid
-* Thingies can collect apples from the trees
-* A thingy dies if it has 0 apples
+* Thingies can collect apples from the trees.
+* A thingy dies if it has 0 apples.
 * Thingies can perform a fixed number of actions each turn. 
 * The order in which thingies play is randomly chosen.
 
@@ -17,8 +17,9 @@ This grid world is full of thingies that love apples.
 ## Winter is coming ruleset
 
 * From time to time, the season switches between summer and winter. 
-* When is summer, more apples appear in the trees, and fewer apples are needed to survive.
-* When it is winter, fewer apples appear in the trees, and more apples are needed to survive.
+* When is summer, more apples appear in the trees.
+* When it is winter, fewer apples appear in the trees.
+* When it is winter, and you are not in a house, you are punished in happiness.
 
 ## Houses ruleset
 
@@ -74,4 +75,6 @@ to install:
 pip install git+https://github.com/pokepetter/ursina.git
 ```
 
-To see the graphical version, install
+RL uses ACME
+
+https://github.com/deepmind/ACME

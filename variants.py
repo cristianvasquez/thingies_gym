@@ -19,6 +19,7 @@ class Season(Variant):
         return False
 
     # Invoked each time the player has no actions left
+    # Perhaps I should take this out.
     def location_cost(self, grid, x, y):
         player_in_a_house = grid[x, y, 0] in [Location_type.UNCLAIMED_HOUSE.value,
                                               Location_type.OWNED_HOUSE.value,
@@ -30,8 +31,7 @@ class Season(Variant):
         # Apples grow in trees
         l_bound, h_bound = self.values['apples_growth']
         is_tree = spots[:, :, 0] == Location_type.TREE.value
-        growing_apples = min(self.np_random.randint(l_bound, h_bound), MAX_APPLES_PER_SPOT)
-        spots[is_tree] += [0, growing_apples]
+        spots[is_tree] += [0, self.np_random.randint(l_bound, h_bound)]
         return spots
 
 
@@ -55,7 +55,7 @@ class Summer(Season):
         return True if current < self.turns_between_seasons else False
 
     def state_info(self, current_turn):
-        return self.__class__.__name__, self.turns_until_season_changes(current_turn)
+        return 0, self.turns_until_season_changes(current_turn)
 
 
 class Winter(Season):
@@ -78,4 +78,4 @@ class Winter(Season):
         return True if current >= self.turns_between_seasons else False
 
     def state_info(self, current_turn):
-        return self.__class__.__name__, self.turns_until_season_changes(current_turn)
+        return 1, self.turns_until_season_changes(current_turn)

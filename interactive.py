@@ -1,3 +1,5 @@
+from dm_env import StepType
+
 from rules import Winter_is_coming, Action
 from pynput.keyboard import Key, Listener, KeyCode
 
@@ -21,25 +23,28 @@ key_map = {
 print("The game starts, exit with ESC", key_map)
 print(game.render())
 
+
 # State, Reward, Is_terminal, Any
 
 class Controller():
     def __init__(self):
-        self.is_terminal = False
+        self.step_type = StepType.FIRST
 
-    def on_press(self,key):
+    def on_press(self, key):
         if (key in key_map):
-            _, reward, self.is_terminal, _ = game.do_action(key_map[key])
-            print(f'Reward: {reward}, is_terminal:{self.is_terminal}')
+            timestep = game.step(key_map[key])
+            self.step_type = timestep.step_type
+            print(f'Reward: {timestep.reward}, step_type:{timestep.step_type}')
 
-    def on_release(self,key):
-        if self.is_terminal:
+    def on_release(self, key):
+        if self.step_type == StepType.LAST:
             print(game.render())
             return False
         if key == Key.esc:
             return False
         if (key in key_map):
             print(game.render())
+
 
 controller = Controller()
 
