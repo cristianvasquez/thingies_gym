@@ -1,8 +1,9 @@
 from enum import Enum, unique
 
-MAX_APPLES_PER_SPOT = 100
-MAX_APPLES_PER_PLAYER = 10000
+MAX_APPLES_PER_USER = 100
+MAX_APPLES_PER_SPOT = MAX_APPLES_PER_USER
 MAX_TURNS = 150
+
 
 @unique
 class Action(Enum):
@@ -13,6 +14,7 @@ class Action(Enum):
     MOVE_UP = 4
     MOVE_DOWN = 5
 
+
 @unique
 class Location_type(Enum):
     EMPTY_WILDERNESS = 0
@@ -22,9 +24,19 @@ class Location_type(Enum):
     FRACTIONAL_OWNERSHIP_HOUSE = 4
 
 
-def DEFAULT_REWARD_FUNCTION(player):
+def DEFAULT_REWARD_FUNCTION(player, grid, variant_state_info):
     (_x, _y), apples, actions_left, active = player
-    return 1 if active else -1000  # Reward the player if still alive, and punish him when he dies (again)
+
+    happiness_multiplier = 1  # Happiness starts at 1
+
+    # If it's winter and the player is not in a house, the player is less happy
+    for season, _ in variant_state_info:
+        if season == 1:  # Winter
+            [current_location_type, _] = grid[_x, _y]
+            if int(current_location_type) in [Location_type.EMPTY_WILDERNESS.value, Location_type.TREE.value]:
+                happiness_multiplier = -1
+
+    return 1. * happiness_multiplier if active else -1000.  # Reward the player if still alive, and punish him when he dies (again)
 
 
 DEFAULT_SETUP = {
@@ -78,7 +90,7 @@ MINI_SETUP_TWO_PLAYERS = {
 }
 
 '''
-This mini setup does not have the summer/winter variants
+Mini setup with very simmilar values for summer and winter
 '''
 MINI_SETUP_SINGLE_PLAYER = {
     'grid_size_x': 4,
@@ -89,9 +101,19 @@ MINI_SETUP_SINGLE_PLAYER = {
     'initial_player_apples': 20,
     'apple_gathering_capacity': 5,
     'initial_apples_per_tree': 10,
-    'actions_per_turn': 5,
+    'actions_per_turn': 1,
     'turns_between_seasons': 2,
     'move_cost': 1,
-    'death_zone': True,
+    'death_zone': False,
+    'summer': {
+        'in_the_wild_cost': 1,
+        'in_a_house_cost': 1,
+        'apples_growth': (3, 10)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
+    },
+    'winter': {
+        'in_the_wild_cost': 1,
+        'in_a_house_cost': 1,
+        'apples_growth': (3, 10)  # number of apples that grow in the season `low` (inclusive) to `high` (exclusive).
+    },
     'reward_function': DEFAULT_REWARD_FUNCTION
 }
