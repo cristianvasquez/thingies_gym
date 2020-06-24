@@ -10,9 +10,9 @@ def test_playing_queue():
     setup['number_of_players'] = 2
     game = Winter_is_coming(setup=setup)
     assert len(game.playing_queue) == 2, "Should start with two players in the queue"
-    game.do_action(Action.DO_NOTHING)
+    game.step(Action.DO_NOTHING)
     assert len(game.playing_queue) == 1, "Should remove a player from the queue"
-    game.do_action(Action.DO_NOTHING)
+    game.step(Action.DO_NOTHING)
     assert len(game.playing_queue) == 2, "Should renew two players in the queue"
 
 
