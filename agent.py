@@ -16,6 +16,7 @@
 """DQN agent implementation."""
 
 import copy
+from typing import NamedTuple
 
 from acme import datasets
 from acme import specs
@@ -31,6 +32,10 @@ import sonnet as snt
 import tensorflow as tf
 import trfl
 
+
+class Save_paths(NamedTuple):
+    data_dir: str
+    experiment_name: str
 
 class DQN(agent.Agent):
     """DQN agent.
@@ -48,7 +53,7 @@ class DQN(agent.Agent):
             params=None,
             logger: loggers.Logger = None,
             checkpoint: bool = True,
-            checkpoint_data=('~/acme', 'checkpoints'),
+            paths: Save_paths = None,
     ):
         """Initialize the agent.
 
@@ -130,8 +135,8 @@ class DQN(agent.Agent):
         target_network = copy.deepcopy(network)
 
         # Ensure that we create the variables before proceeding (maybe not needed).
-        tf2_utils.create_variables(network, [environment_spec.observations])
-        tf2_utils.create_variables(target_network, [environment_spec.observations])
+        # tf2_utils.create_variables(network, [environment_spec.observations])
+        # tf2_utils.create_variables(target_network, [environment_spec.observations])
 
         # Create the actor which defines how we take actions.
         actor = actors.FeedForwardActor(policy_network, adder)
@@ -150,12 +155,11 @@ class DQN(agent.Agent):
             checkpoint=checkpoint)
 
         if checkpoint:
-            directory, experiment_name = checkpoint_data
             self._checkpointer = tf2_savers.Checkpointer(
                 add_uid=False,
                 objects_to_save=learner.state,
-                directory=directory,
-                subdirectory=experiment_name,
+                directory=paths.data_dir,
+                subdirectory=paths.experiment_name,
                 time_delta_minutes=60.)
         else:
             self._checkpointer = None
@@ -165,6 +169,11 @@ class DQN(agent.Agent):
             learner=learner,
             min_observations=max(params['batch_size'], params['min_replay_size']),
             observations_per_step=float(params['batch_size']) / params['samples_per_insert'])
+
+    def save(self):
+        if self._checkpointer is not None:
+            self._checkpointer.save(force=True)
+            return self._checkpointer._checkpoint_manager.directory
 
     def update(self):
         super().update()

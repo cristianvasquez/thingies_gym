@@ -1,28 +1,25 @@
 import neptune
-from absl.testing import absltest
-import numpy as np
 
 import acme
 from acme import specs
 
 from acme import wrappers
-
 import sonnet as snt
 from acme.utils import loggers
 
-from agent import DQN
+from agent import DQN, Save_paths
 from neptune_logger import NeptuneLogger
 from rules import Winter_is_coming
 from setup import DEFAULT_REWARD_FUNCTION
+from acme.tf import utils as tf2_utils
 
 import pathlib
 import os
-from absl import logging
-
-
 
 neptune_enabled = True
-num_episodes= 10
+neptune_upload_checkpoint = True if neptune_enabled else False
+
+num_episodes = 1
 
 SETUP = {
     'grid_size_x': 4,
@@ -83,7 +80,6 @@ PARAMS = {
 }
 
 
-
 def do_example_run(game, agent, number_of_runs=3):
     for i in range(number_of_runs):
         timestep = game.reset()
@@ -95,36 +91,41 @@ def do_example_run(game, agent, number_of_runs=3):
 
 
 def run_dqn(experiment_name):
-    checkpoint_dirs = (f'{current_dir}/data', experiment_name)
+    directories = Save_paths(data_dir=f'{current_dir}/data', experiment_name=experiment_name)
 
     game = Winter_is_coming(setup=PARAMS['setup'])
     environment = wrappers.SinglePrecisionWrapper(game)
     spec = specs.make_environment_spec(environment)
-    # Construct the agent.
 
-    def _make_network(action_spec: specs.DiscreteArray) -> snt.Module:
-        return snt.Sequential([
+    # Build the network.
+    def _make_network(spec) -> snt.Module:
+        network = snt.Sequential([
             snt.Flatten(),
-            snt.nets.MLP([50, 50, action_spec.num_values]),
+            snt.nets.MLP([50, 50, spec.actions.num_values]),
         ])
-    network = _make_network(spec.actions)
+        tf2_utils.create_variables(network, [spec.observations])
+        return network
 
+    network = _make_network(spec)
+
+    # Setup the logger
     if neptune_enabled:
         agent_logger = NeptuneLogger(label='DQN agent', time_delta=0.1)
         loop_logger = NeptuneLogger(label='Environment loop', time_delta=0.1)
-        PARAMS['network']=f'{network}'
+        PARAMS['network'] = f'{network}'
         neptune.init('cvasquez/sandbox')
         neptune.create_experiment(name='neptune_test', params=PARAMS)
     else:
         agent_logger = loggers.TerminalLogger('DQN agent', time_delta=1.)
         loop_logger = loggers.TerminalLogger('Environment loop', time_delta=1.)
 
+    # Build the agent
     agent = DQN(
         environment_spec=spec,
         network=network,
-        params = PARAMS,
+        params=PARAMS,
         checkpoint=True,
-        checkpoint_data=checkpoint_dirs,
+        paths=directories,
         logger=agent_logger
     )
     # Try running the environment loop. We have no assertions here because all
@@ -132,21 +133,22 @@ def run_dqn(experiment_name):
     loop = acme.EnvironmentLoop(environment, agent, logger=loop_logger)
     loop.run(num_episodes=PARAMS['num_episodes'])
 
+    last_checkpoint_path = agent.save()
+
+    # Upload last checkpoint
+    if neptune_upload_checkpoint and last_checkpoint_path:
+        files = os.listdir(last_checkpoint_path)
+        for f in files:
+            neptune.log_artifact(os.path.join(last_checkpoint_path, f))
+
     if neptune_enabled:
         neptune.stop()
-
-    do_example_run(game, agent)
 
 
 current_dir = pathlib.Path().absolute()
 
 if __name__ == '__main__':
-
-    np.save('my_file.npy', SETUP)
     experiment_name = 'dqn_thingy_3'
     print(f'Experiment [{experiment_name}] started')
     run_dqn(experiment_name)
     print(f'Experiment [{experiment_name}] ended')
-
-
-
