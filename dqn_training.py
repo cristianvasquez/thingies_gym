@@ -19,11 +19,11 @@ import os
 neptune_enabled = True
 neptune_upload_checkpoint = True if neptune_enabled else False
 
-num_episodes = 1
+num_episodes = 100000
 
 SETUP = {
-    'grid_size_x': 4,
-    'grid_size_y': 4,
+    'grid_size_x': 5,
+    'grid_size_y': 5,
     'number_of_players': 1,
     'number_of_houses': 2,
     'number_of_trees': 1,
@@ -79,7 +79,6 @@ PARAMS = {
 
 }
 
-
 def do_example_run(game, agent, number_of_runs=3):
     for i in range(number_of_runs):
         timestep = game.reset()
@@ -91,6 +90,7 @@ def do_example_run(game, agent, number_of_runs=3):
 
 
 def run_dqn(experiment_name):
+    current_dir = pathlib.Path().absolute()
     directories = Save_paths(data_dir=f'{current_dir}/data', experiment_name=experiment_name)
 
     game = Winter_is_coming(setup=PARAMS['setup'])
@@ -114,7 +114,7 @@ def run_dqn(experiment_name):
         loop_logger = NeptuneLogger(label='Environment loop', time_delta=0.1)
         PARAMS['network'] = f'{network}'
         neptune.init('cvasquez/sandbox')
-        neptune.create_experiment(name='neptune_test', params=PARAMS)
+        neptune.create_experiment(name=experiment_name, params=PARAMS)
     else:
         agent_logger = loggers.TerminalLogger('DQN agent', time_delta=1.)
         loop_logger = loggers.TerminalLogger('Environment loop', time_delta=1.)
@@ -144,11 +144,11 @@ def run_dqn(experiment_name):
     if neptune_enabled:
         neptune.stop()
 
+    do_example_run(game,agent)
 
-current_dir = pathlib.Path().absolute()
 
 if __name__ == '__main__':
-    experiment_name = 'dqn_thingy_3'
+    experiment_name = 'dqn_thingy_home_2'
     print(f'Experiment [{experiment_name}] started')
     run_dqn(experiment_name)
     print(f'Experiment [{experiment_name}] ended')
