@@ -1,6 +1,8 @@
 # Thingy's grid-world
 
-This grid world is full of thingies that love apples.
+My Reinforcement learning playground.
+
+'This grid world is full of thingies that love apples.'
 
 ## Base rules
 
@@ -78,3 +80,5 @@ pip install git+https://github.com/pokepetter/ursina.git
 RL uses ACME
 
 https://github.com/deepmind/ACME
+
+Author: Cristian Vasquez
